@@ -9,18 +9,20 @@ export function generateStaticParams() {
 }
 
 export default async function LocaleLayout({
-    children,
-    params: { lang },
+  children,
+  params,
 }: {
-    children: React.ReactNode;
-    params: { lang: string };
+  children: React.ReactNode;
+  params: Promise<{ lang: string }>;
 }) {
-    // Validate locale
-    if (!locales.includes(lang as any)) {
-        notFound();
-    }
+  const { lang } = await params;
+  
+  // Validate locale
+  if (!locales.includes(lang as any)) {
+    notFound();
+  }
 
-    const messages = await getMessages();
+  const messages = await getMessages();
 
     return (
         <html lang={lang}>
