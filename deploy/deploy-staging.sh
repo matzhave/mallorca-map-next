@@ -27,7 +27,7 @@ sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_H
 echo "📤 Copying files to server..."
 sshpass -p "$SERVER_PASS" rsync -avz --delete \
   .next/standalone/ \
-  $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/apps/web/
+  $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/
 
 sshpass -p "$SERVER_PASS" rsync -avz --delete \
   .next/static \

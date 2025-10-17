@@ -5,27 +5,27 @@ import { locales } from '@/i18n';
 import '@/globals.css';
 
 export function generateStaticParams() {
-  return locales.map((locale) => ({ lang: locale }));
+    return locales.map((locale) => ({ lang: locale }));
 }
 
 export default async function LocaleLayout({
-  children,
-  params,
+    children,
+    params,
 }: {
-  children: React.ReactNode;
-  params: Promise<{ lang: string }>;
+    children: React.ReactNode;
+    params: Promise<{ lang: string }>;
 }) {
-  const { lang } = await params;
-  
-  // Validate locale
-  if (!locales.includes(lang as any)) {
-    notFound();
-  }
+    const { lang } = await params;
 
-  // Enable static rendering
-  setRequestLocale(lang);
+    // Validate locale
+    if (!locales.includes(lang as any)) {
+        notFound();
+    }
 
-  const messages = await getMessages();
+    // Enable static rendering
+    setRequestLocale(lang);
+
+    const messages = await getMessages();
 
     return (
         <html lang={lang}>

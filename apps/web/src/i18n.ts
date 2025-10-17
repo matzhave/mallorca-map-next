@@ -5,23 +5,23 @@ export const locales = ['de', 'en', 'es'] as const;
 export type Locale = (typeof locales)[number];
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  let locale = await requestLocale;
-  
-  // Fallback to 'de' if locale is undefined
-  if (!locale || !locales.includes(locale as any)) {
-    locale = 'de';
-  }
+    let locale = await requestLocale;
 
-  const messages =
-    locale === 'de'
-      ? deTranslations
-      : locale === 'en'
-        ? enTranslations
-        : esTranslations;
+    // Fallback to 'de' if locale is undefined
+    if (!locale || !locales.includes(locale as any)) {
+        locale = 'de';
+    }
 
-  return {
-    messages,
-    locale,
-  };
+    const messages =
+        locale === 'de'
+            ? deTranslations
+            : locale === 'en'
+                ? enTranslations
+                : esTranslations;
+
+    return {
+        messages,
+        locale,
+    };
 });
 

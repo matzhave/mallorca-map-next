@@ -2,9 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'mallorca-map-staging',
-      script: 'bun',
-      args: 'run start',
-      cwd: '/var/www/mallorca-map-next/apps/web',
+      script: './apps/web/server.js',
+      cwd: '/var/www/mallorca-map-next',
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,
