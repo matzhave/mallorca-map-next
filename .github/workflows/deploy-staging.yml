@@ -23,18 +23,23 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "SSH key setup complete"
 
       - name: 🚀 Deploy to Server
         run: |
-          ssh -i ~/.ssh/deploy_key $SERVER_USER@$SERVER_HOST << 'EOF'
+          export SERVER_HOST="${{ env.SERVER_HOST }}"
+          export SERVER_USER="${{ env.SERVER_USER }}"
+          export DEPLOY_PATH="${{ env.DEPLOY_PATH }}"
+          
+          ssh -v -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 $SERVER_USER@$SERVER_HOST << 'DEPLOY_EOF'
           set -e
           
           echo "📋 Deploying Mallorca Map Staging..."
           echo ""
           
           # Navigate to app directory
-          cd $DEPLOY_PATH
+          cd /app/mallorca-map-next
           
           # Git Pull
           echo "📥 Pulling latest code from GitHub..."
@@ -76,7 +81,7 @@ jobs:
           fi
           echo ""
           echo "🎉 Deployment completed successfully!"
-          EOF
+          DEPLOY_EOF
 
       - name: ✅ Deployment Success
         if: success()
