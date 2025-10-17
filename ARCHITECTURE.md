@@ -406,6 +406,490 @@ const { data, error } = await supabase
 
 ---
 
+## 📌 Shared vs App-Spezifisch: Critical Architecture Decision
+
+### Das Kernkonzept
+
+Dein Monorepo funktioniert nach dem Prinzip: **"Teile die Logik, nicht die UI"**
+
+```
+@repo/shared = Das Gehirn (Logik + Daten)
+apps/web = Die Web-Augen (Browser UI)
+apps/mobile = Die Mobile-Augen (Native UI)
+```
+
+Jede App rendert die Daten mit ihrer Platform-spezifischen UI.
+
+---
+
+### ✅ SHARED PACKAGE: Was Gehört Rein?
+
+#### 1. Types & Interfaces (Die Datenstrukturen)
+
+```typescript
+// packages/shared/src/types.ts
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url?: string;
+  created_at: string;
+}
+
+export interface Activity {
+  id: string;
+  title: string;
+  description: string;
+  category: 'hiking' | 'beach' | 'culture';
+  location: {
+    lat: number;
+    lng: number;
+  };
+  difficulty: 'easy' | 'medium' | 'hard';
+  duration_minutes: number;
+  rating: number;
+  image_url: string;
+}
+
+export type ApiResponse<T> = {
+  data?: T;
+  error?: string;
+  timestamp: string;
+};
+```
+
+**Grund:** Beide Apps nutzen die gleichen Datentypen von der Datenbank.
+
+#### 2. Geschäftslogik & Berechnungen
+
+```typescript
+// packages/shared/src/utils/activityUtils.ts
+
+// Berechnung: Distanz zwischen zwei Positionen
+export function calculateDistance(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  // Haversine Formula - Luftlinie Distanz
+  const R = 6371; // Erde Radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+// Formatting: Aktivität für Display formatieren
+export function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  if (hours === 0) return `${mins} min`;
+  if (mins === 0) return `${hours} h`;
+  return `${hours} h ${mins} min`;
+}
+
+// Formatting: Schwierigkeit als Color-Code
+export function getDifficultyColor(difficulty: string): {
+  bg: string;
+  text: string;
+} {
+  switch (difficulty) {
+    case 'easy':
+      return { bg: 'bg-green-100', text: 'text-green-800' };
+    case 'medium':
+      return { bg: 'bg-yellow-100', text: 'text-yellow-800' };
+    case 'hard':
+      return { bg: 'bg-red-100', text: 'text-red-800' };
+    default:
+      return { bg: 'bg-gray-100', text: 'text-gray-800' };
+  }
+}
+
+// Validierung: Titel ist gültig?
+export function validateActivityTitle(title: string): boolean {
+  return title.trim().length > 0 && title.length <= 100;
+}
+```
+
+**Grund:** Diese Logik ist in Web UND Mobile identisch. Warum zweimal schreiben?
+
+#### 3. Datenbank-Operationen (Supabase Queries)
+
+```typescript
+// packages/shared/src/utils/activityService.ts
+import { supabase } from '@repo/supabase';
+import { Activity } from '../types';
+
+// Alle Aktivitäten einer Kategorie laden
+export async function getActivitiesByCategory(
+  category: string
+): Promise<Activity[]> {
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('category', category)
+    .order('rating', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching activities:', error);
+    return [];
+  }
+
+  return data as Activity[];
+}
+
+// Einzelne Aktivität laden
+export async function getActivityById(id: string): Promise<Activity | null> {
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching activity:', error);
+    return null;
+  }
+
+  return data as Activity;
+}
+
+// Aktivität erstellen
+export async function createActivity(
+  activity: Omit<Activity, 'id' | 'created_at'>
+): Promise<Activity | null> {
+  const { data, error } = await supabase
+    .from('activities')
+    .insert([activity])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating activity:', error);
+    return null;
+  }
+
+  return data as Activity;
+}
+
+// Realtime Updates abonnieren
+export function subscribeToActivityChanges(
+  callback: (activity: Activity) => void
+) {
+  return supabase
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'activities' },
+      (payload) => {
+        callback(payload.new as Activity);
+      }
+    )
+    .subscribe();
+}
+```
+
+**Grund:** DB-Logik ist nicht UI-spezifisch. Beide Apps fragen die gleichen Daten ab.
+
+#### 4. Internationalisierung (i18n)
+
+```json
+// packages/shared/src/i18n/de.json
+{
+  "activity.title": "Aktivität",
+  "activity.description": "Beschreibung",
+  "activity.difficulty": "Schwierigkeit",
+  "activity.duration": "Dauer",
+  "activity.rating": "Bewertung",
+  "activity.difficulty.easy": "Leicht",
+  "activity.difficulty.medium": "Mittel",
+  "activity.difficulty.hard": "Schwer",
+  "category.hiking": "Wanderung",
+  "category.beach": "Strand",
+  "category.culture": "Kultur"
+}
+```
+
+**Grund:** Die Übersetzungen sind gleich - ob Web oder Mobile.
+
+#### 5. Constants & Enums
+
+```typescript
+// packages/shared/src/constants.ts
+export const ACTIVITY_CATEGORIES = [
+  'hiking',
+  'beach',
+  'culture',
+  'food',
+] as const;
+
+export const DIFFICULTY_LEVELS = ['easy', 'medium', 'hard'] as const;
+
+export const SUPPORTED_LOCALES = ['de', 'en', 'es'] as const;
+
+export const MAX_ACTIVITY_TITLE_LENGTH = 100;
+export const MAX_DESCRIPTION_LENGTH = 1000;
+
+export const DEFAULT_MAP_ZOOM = 12;
+export const DEFAULT_LOCATION = { lat: 39.5696, lng: 2.6502 }; // Mallorca Center
+```
+
+**Grund:** Diese Konstanten sind überall gleich.
+
+---
+
+### ❌ APP-SPEZIFISCH: Was Gehört NICHT in Shared?
+
+#### 1. UI-Komponenten (Wichtigste Regel!)
+
+❌ **NIEMALS in `@repo/shared`:**
+```typescript
+// ❌ FALSCH: packages/shared/src/components/Button.tsx
+import React from 'react';
+export function Button({ children }) {
+  return <button>{children}</button>; // ❌ NO! Web-spezifisch
+}
+```
+
+✅ **Richtig - Web:**
+```typescript
+// ✅ apps/web/src/components/ui/button.tsx
+import React from 'react';
+import { cva } from 'class-variance-authority';
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'default' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = 'default', size = 'md', ...props }, ref) => (
+    <button
+      ref={ref}
+      className={cn(buttonVariants({ variant, size }), className)}
+      {...props}
+    />
+  )
+);
+```
+
+✅ **Richtig - Mobile:**
+```typescript
+// ✅ apps/mobile/components/Button.tsx
+import React from 'react';
+import { TouchableOpacity, Text, View } from 'react-native';
+
+interface ButtonProps {
+  onPress?: () => void;
+  variant?: 'default' | 'outline' | 'ghost';
+  children: React.ReactNode;
+}
+
+export function Button({
+  onPress,
+  variant = 'default',
+  children,
+}: ButtonProps) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      className={`px-4 py-2 rounded-lg ${
+        variant === 'default' ? 'bg-primary' : 'bg-gray-100'
+      }`}
+    >
+      <Text className={variant === 'default' ? 'text-white' : 'text-black'}>
+        {children}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+```
+
+**Grund:** Web nutzt HTML `<button>`, Mobile nutzt React Native `<TouchableOpacity>`. Nicht zu vereinbaren!
+
+#### 2. Pages & Screens
+
+❌ **Nicht in shared:**
+- `Page.tsx` (Next.js Web Pages)
+- `Layout.tsx` (Next.js Layouts)
+- `index.tsx` (Mobile Screens)
+
+✅ **Gehört in jede App:**
+```typescript
+// apps/web/src/app/[lang]/activities/page.tsx
+import { getActivitiesByCategory } from '@repo/shared';
+import { ActivityCard } from '@/components/ActivityCard';
+
+export default async function ActivitiesPage() {
+  const activities = await getActivitiesByCategory('hiking');
+  return (
+    <div className="p-8">
+      <h1>Activities</h1>
+      <div className="grid grid-cols-3 gap-4">
+        {activities.map((a) => (
+          <ActivityCard key={a.id} activity={a} />
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+```typescript
+// apps/mobile/app/activities.tsx
+import { getActivitiesByCategory } from '@repo/shared';
+import { ActivityListItem } from '@/components/ActivityListItem';
+import { ScrollView } from 'react-native';
+
+export default function ActivitiesScreen() {
+  const [activities, setActivities] = React.useState([]);
+
+  React.useEffect(() => {
+    getActivitiesByCategory('hiking').then(setActivities);
+  }, []);
+
+  return (
+    <ScrollView>
+      {activities.map((a) => (
+        <ActivityListItem key={a.id} activity={a} />
+      ))}
+    </ScrollView>
+  );
+}
+```
+
+**Grund:** Routing ist platform-spezifisch!
+
+#### 3. Styling & CSS
+
+❌ **Nicht in shared:**
+- Tailwind CSS Classes
+- NativeWind Classes
+- CSS Modules
+- SCSS/PostCSS
+
+✅ **In jeder App:**
+```typescript
+// apps/web/src/components/ActivityCard.tsx
+export function ActivityCard({ activity }) {
+  return (
+    <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:shadow-lg">
+      {/* Tailwind Classes sind Web-spezifisch */}
+    </div>
+  );
+}
+```
+
+```typescript
+// apps/mobile/components/ActivityCard.tsx
+export function ActivityCard({ activity }) {
+  return (
+    <View className="bg-white p-4 rounded-lg shadow-md">
+      {/* NativeWind Classes sind Mobile-spezifisch */}
+    </View>
+  );
+}
+```
+
+**Grund:** Web & Mobile haben völlig unterschiedliche Styling-Systeme!
+
+#### 4. Navigation & Routing
+
+❌ **Nicht in shared:**
+- URL-basierte Navigation (Web)
+- Stack Navigator (Mobile)
+- Link Components
+- useRouter Logik
+
+✅ **In jeder App:**
+
+Web:
+```typescript
+// apps/web/src/components/ActivityLink.tsx
+import Link from 'next/link';
+
+export function ActivityLink({ activity }) {
+  return <Link href={`/activities/${activity.id}`}>{activity.title}</Link>;
+}
+```
+
+Mobile:
+```typescript
+// apps/mobile/components/ActivityLink.tsx
+import { useRouter } from 'expo-router';
+import { TouchableOpacity, Text } from 'react-native';
+
+export function ActivityLink({ activity }) {
+  const router = useRouter();
+  return (
+    <TouchableOpacity onPress={() => router.push(`/activity/${activity.id}`)}>
+      <Text>{activity.title}</Text>
+    </TouchableOpacity>
+  );
+}
+```
+
+**Grund:** Navigation ist komplett unterschiedlich!
+
+#### 5. Platform-APIs
+
+❌ **Niemals direkt in shared nutzen:**
+- `window`, `document` (Web)
+- `localStorage` (Web)
+- `Dimensions`, `PixelRatio` (Mobile)
+- `Geolocation` (wird anders aufgerufen)
+
+✅ **Falls nötig, abstrahieren:**
+```typescript
+// packages/shared/src/utils/storage.ts
+// Abstraktion für Cross-Platform Storage
+export interface StorageProvider {
+  getItem(key: string): Promise<string | null>;
+  setItem(key: string, value: string): Promise<void>;
+  removeItem(key: string): Promise<void>;
+}
+
+// Web wird so genutzt:
+// const storage = new WebStorageProvider();
+
+// Mobile wird so genutzt:
+// const storage = new AsyncStorageProvider();
+```
+
+---
+
+### 🔄 Der Workflow
+
+```
+1. Neue Feature planen
+   ↓
+2. Type definieren → @repo/shared/src/types.ts
+   ↓
+3. Geschäftslogik → @repo/shared/src/utils/
+   ↓
+4. DB Queries → @repo/shared/src/utils/
+   ↓
+5. i18n Keys → @repo/shared/src/i18n/
+   ↓
+6. Web UI → apps/web/src/components/
+   ↓
+7. Web Page → apps/web/src/app/[lang]/...
+   ↓
+8. Mobile UI → apps/mobile/components/
+   ↓
+9. Mobile Screen → apps/mobile/app/...
+   ↓
+10. Test beide Apps: bun run build
+```
+
+---
+
 ## Build System (Turborepo)
 
 ### Was ist Turborepo?
