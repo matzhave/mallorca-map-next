@@ -760,112 +760,69 @@ bun run type-check
 
 ---
 
-## 🎓 Zusammenfassung für Claude/ChatGPT
+## 🔴 CODE REVIEW & APPROVAL (⭐ KRITISCH!)
 
-Wenn ich dir Code zum editieren gebe:
-1. ✅ Respektiere die Folder-Struktur
-2. ✅ Verwende TypeScript Typen
-3. ✅ Nutze Tailwind CSS für Styling
-4. ✅ Check Turborepo Dependencies
-5. ✅ Teste mit `bun run build` vor dem Commit
-6. ✅ Update diese `.cursorrules` wenn die Struktur sich ändert
+**Nur EINE Regel: git push braucht deine Bestätigung!**
 
-Wenn ich frage "Wie funktioniert X?":
-1. 📖 Zeige mir die relevanten Files
-2. 🔍 Erkläre den Datenfluss
-3. 📝 Code-Snippets mit Kontext
-4. 🧪 Wie man es testet
+### ✅ Claude darf selbst machen:
+- Alle Code-Änderungen (intelligent & gut)
+- Neue Komponenten erstellen
+- Features implementieren
+- Lokal testen (`bun run build`, `type-check`, `lint`)
+- `git add .` und `git commit` machen
+- Tests schreiben & durchführen
 
-Wenn ich sage "Mache einen Deploy":
-1. 🔧 Erkläre alle Schritte
-2. 🔐 Frage nach SSH-Zugängen wenn nötig
-3. 📋 Gib mir ein Checkliste
-4. ✨ Teste vor Produktiv-Deploy
+### ❌ Claude darf NICHT:
+- `git push` machen (NUR du!)
+- Deployment triggern
+- SSH zum Deployen nutzen
+
+### 🔄 Workflow:
+
+```
+STEP 1️⃣: Claude arbeitet
+├─ Code ändern (intelligent)
+├─ Testen: bun run build ✅
+├─ Testen: bun run type-check ✅
+├─ Testen: bun run lint ✅
+├─ git add . && git commit
+└─ "Code ist fertig und getestet!"
+
+STEP 2️⃣: Matthias reviewt (optional)
+├─ Schaut Code/Commits an
+└─ "Looks good!" oder "Ändere noch X"
+
+STEP 3️⃣: Claude pusht (ABER NUR mit OK!)
+├─ Wartet auf "Deploy!" oder "git push"
+├─ "Du kannst jetzt git push machen"
+└─ Matthias: git push origin main
+
+STEP 4️⃣: GitHub Actions (automatisch)
+├─ Deployment läuft
+└─ ✅ Live!
+```
+
+### 📋 Checkliste vor "Code ist fertig":
+
+- [ ] Code geschrieben
+- [ ] `bun run build` erfolgreich ✅
+- [ ] `bun run type-check` erfolgreich ✅
+- [ ] `bun run lint` erfolgreich ✅
+- [ ] Git commits sauber
+- [ ] "Code ist fertig & getestet!"
+
+### 📋 Checkliste vor git push:
+
+- [ ] Habe ich "Deploy!" oder "git push OK" gehört?
+- [ ] Erst DANN: "Du kannst jetzt git push machen"
+- [ ] NICHT selbst pushen! (NUR User!)
 
 ---
 
-## 🚀 DEPLOYMENT RULES (⭐ WICHTIG!)
+## 🔴 DEPLOYMENT RULE (⭐ ABSOLUTE RULE!)
 
-### Deployment-Flow (IMMER befolgen!)
-
-```
-HAUPTWEG: GitHub Actions (automatisch)
-├─ User: Code-Änderungen lokal
-├─ User: "Deploy die neue Version!"
-├─ Claude: git push origin main
-├─ GitHub Actions triggert automatisch
-└─ ✅ Deployed!
-
-NEBENWEG: SSH (NUR für Ausnahmefälle!)
-├─ Logs checken
-├─ Status prüfen
-├─ Pakete updaten
-└─ Emergency-Fixes
-```
-
-### ✅ WAS CLAUDE MACHT bei "Deploy!":
-
-1. **Git Push (mit GitHub Token)**
-   ```bash
-   git push origin main
-   ```
-
-2. **GitHub Actions wartet** (triggert automatisch)
-   - bun install
-   - bun run build
-   - sudo systemctl restart
-   - nginx reload
-
-3. **SSH Health-Check (optional)**
-   ```bash
-   # Logs checken
-   sudo journalctl -u mallorca-map-staging -f
-   
-   # Status prüfen
-   sudo systemctl status mallorca-map-staging
-   ```
-
-4. **Report:** "✅ Deployed & Live!"
-
-### ❌ WAS CLAUDE NICHT MACHT:
-
-- ❌ Direkt SSH zum Deployen (nur GitHub Actions!)
-- ❌ Manuell `git pull` auf Server (GitHub Actions macht das)
-- ❌ Manuell `bun build` auf Server (GitHub Actions macht das)
-- ❌ GitHub umgehen (immer GitHub Actions benutzen!)
-
-### 🔴 SSH wird nur benutzt für:
-
-```bash
-# ✅ Logs
-sudo journalctl -u mallorca-map-staging -f
-
-# ✅ Status
-sudo systemctl status mallorca-map-staging
-ps aux | grep node
-
-# ✅ Packages
-sudo apt update && sudo apt upgrade
-
-# ✅ Nginx-Config
-sudo nginx -t
-sudo systemctl reload nginx
-
-# ✅ Emergency-Fix (falls GA kaputt)
-cd /app/mallorca-map-next && git pull && bun build
-```
-
-### 📋 Deployment Checklist:
-
-Vor Deploy:
-- [ ] Code lokal getestet (`bun run build` erfolgreich)
-- [ ] `bun run type-check` OK
-- [ ] Git commits sauber
-
-Nach Deploy:
-- [ ] GitHub Actions erfolgreich (grüner Haken)
-- [ ] Website antwortet (curl Test)
-- [ ] Logs OK (journalctl)
+**Nur User (Matthias) darf git push machen!**
+Das Deployment geht SOFORT LIVE nach Push!
 
 ---
 

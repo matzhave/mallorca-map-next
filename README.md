@@ -66,41 +66,48 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 **URL:** `https://staging.mallorca-map.com`  
 **Auth:** `staging / 9963`
 
+### ⚠️ WICHTIGSTE REGEL: NUR DU MACHST GIT PUSH!
+
+Warum? Das Deployment geht **AUTOMATISCH LIVE** nach Push!
+- ❌ **Claude darf NICHT** `git push` machen
+- ✅ **NUR du entscheidest** wann live deployed wird
+
 ### Deployment Flow (⭐ READ THIS!)
 
 ```
-📌 HAUPTWEG: GitHub Actions (automatisch)
-├─ Du lokal: code ändern & committen
-├─ Du: "Deploy die neue Version!"
-├─ Claude: git push origin main → GitHub
-├─ GitHub Actions triggert automatisch
-│  ├─ bun install
-│  ├─ bun run build
-│  ├─ sudo systemctl restart
-│  └─ nginx reload
+📌 SCHRITT 1️⃣: Claude arbeitet
+├─ Code entwickeln & testen
+├─ Lokal testen: bun run build ✅
+└─ Git commits vorbereiten (ABER NICHT PUSHEN!)
+
+📌 SCHRITT 2️⃣: Du reviewst & entscheidest
+├─ "Sieht gut aus!"
+└─ Du machst: git push origin main
+
+📌 SCHRITT 3️⃣: GitHub Actions (automatisch)
+├─ bun install
+├─ bun run build
+├─ sudo systemctl restart
 └─ ✅ Live!
 
-🔴 NEBENWEG: SSH (nur Ausnahmefälle!)
-├─ Logs checken
-├─ Status prüfen
-├─ Pakete updaten
-└─ ❌ NIEMALS für reguläres Deployment!
+📌 SCHRITT 4️⃣: Claude (optional)
+└─ Health-Checks & Report
 ```
 
 ### Deploy durchführen
 
 ```bash
-# 1. Code-Changes lokal machen & committen (NICHT pushen!)
+# 1. Claude entwickelt & committet (lokal)
 git add .
 git commit -m "feature: xyz"
 
-# 2. Sag mir Bescheid:
-# "Deploy die neue Version!"
+# 2. Claude sagt: "Bereit zum Push!"
 
-# 3. Ich mache:
-# - git push origin main
-# - GitHub Actions läuft automatisch
-# - ✅ Deployed!
+# 3. DU SELBST machst den Push:
+git push origin main
+
+# 4. GitHub Actions läuft automatisch
+# ✅ Website ist live!
 ```
 
 **Das war's!** Deployment ist vollautomatisch über GitHub Actions.
