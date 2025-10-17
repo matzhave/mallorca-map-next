@@ -1,5 +1,4 @@
-import { useTranslations } from 'next-intl';
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { supabase } from '@repo/supabase';
 
 export default async function HomePage({
@@ -10,7 +9,7 @@ export default async function HomePage({
   const { lang } = await params;
   setRequestLocale(lang);
   
-  const t = useTranslations('common');
+  const t = await getTranslations('common');
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary/10 to-background">
