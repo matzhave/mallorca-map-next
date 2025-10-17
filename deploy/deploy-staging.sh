@@ -41,7 +41,15 @@ sshpass -p "$SERVER_PASS" rsync -avz --delete \
 sshpass -p "$SERVER_PASS" scp ecosystem.config.cjs \
   $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/apps/web/
 
-# 5. Setup Nginx
+# 5. Install SSL Certificate (if not exists)
+echo "🔒 Setting up SSL..."
+sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST \
+  "if [ ! -f /etc/letsencrypt/live/staging.mallorca-map.com/fullchain.pem ]; then \
+     echo 'Installing SSL certificate...' && \
+     certbot certonly --standalone -d staging.mallorca-map.com --non-interactive --agree-tos --email admin@mallorca-map.com --pre-hook 'systemctl stop nginx' --post-hook 'systemctl start nginx'; \
+   fi"
+
+# 6. Setup Nginx
 echo "🌐 Setting up Nginx..."
 sshpass -p "$SERVER_PASS" scp ../../deploy/nginx-staging.conf \
   $SERVER_USER@$SERVER_HOST:/etc/nginx/sites-available/staging.mallorca-map.com
@@ -50,13 +58,6 @@ sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_H
   "ln -sf /etc/nginx/sites-available/staging.mallorca-map.com /etc/nginx/sites-enabled/ && \
    nginx -t && \
    systemctl reload nginx"
-
-# 6. Install SSL Certificate (if not exists)
-echo "🔒 Setting up SSL..."
-sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST \
-  "if [ ! -f /etc/letsencrypt/live/staging.mallorca-map.com/fullchain.pem ]; then \
-     certbot --nginx -d staging.mallorca-map.com --non-interactive --agree-tos --email admin@mallorca-map.com; \
-   fi"
 
 # 7. Start PM2
 echo "🚀 Starting PM2..."
