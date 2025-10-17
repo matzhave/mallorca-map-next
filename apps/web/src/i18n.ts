@@ -1,5 +1,4 @@
 import { getRequestConfig } from 'next-intl/server';
-import { getRequestLocale } from 'next-intl/server';
 import { deTranslations, enTranslations, esTranslations } from '@repo/shared';
 
 export const locales = ['de', 'en', 'es'] as const;
