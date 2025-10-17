@@ -1,0 +1,418 @@
+# Cursor AI Rules für Mallorca Map Monorepo
+
+## 🎯 Projekt-Kontext
+
+**Name:** Mallorca Map Next  
+**Typ:** Full-Stack Monorepo mit Web + Mobile  
+**Package Manager:** Bun 1.1.40+  
+**Node Version:** >=20.0.0  
+**Build Tool:** Turborepo 2.3.3+
+
+---
+
+## 📁 Monorepo-Struktur
+
+```
+mallorca-map-next/
+├── apps/
+│   ├── web/                    # 🌐 Next.js 15 Web App (SSR/ISR)
+│   │   ├── src/
+│   │   │   ├── app/            # App Router mit [lang] Dynamic Routing
+│   │   │   ├── components/     # React Components (shadcn/ui)
+│   │   │   ├── lib/            # Utilities (utils.ts)
+│   │   │   ├── i18n.ts         # Internationalisierung
+│   │   │   ├── globals.css     # Global Tailwind Styles
+│   │   │   └── public/         # Static Assets + robots.txt
+│   │   ├── next.config.mjs     # Next.js Config
+│   │   ├── tailwind.config.ts  # Tailwind Setup mit shadcn/ui
+│   │   ├── postcss.config.js   # PostCSS Config
+│   │   ├── tsconfig.json       # TS Config
+│   │   └── package.json
+│   │
+│   └── mobile/                 # 📱 React Native Expo App
+│       ├── app/                # Expo Router (Native Stack)
+│       ├── components/         # Native Components
+│       ├── assets/             # Images, Fonts
+│       ├── tailwind.config.js  # NativeWind Config
+│       ├── babel.config.js     # Metro Bundler Config
+│       ├── app.json            # Expo Config
+│       └── package.json
+│
+├── packages/
+│   ├── shared/                 # 📦 Shared Utilities
+│   │   ├── src/
+│   │   │   ├── i18n/           # Translations (de.json, en.json, es.json)
+│   │   │   ├── utils/          # date.ts, string.ts
+│   │   │   └── index.ts
+│   │   └── package.json
+│   │
+│   ├── supabase/               # 🗄️ Supabase Client + Types
+│   │   ├── src/
+│   │   │   ├── client.ts       # Supabase Client Init
+│   │   │   ├── types.ts        # Generated Types
+│   │   │   └── index.ts
+│   │   └── package.json
+│   │
+│   └── typescript-config/      # ⚙️ Shared TS Configs
+│       ├── base.json           # Base Config
+│       ├── nextjs.json         # Next.js Config
+│       ├── react-native.json   # React Native Config
+│       └── package.json
+│
+├── deploy/                     # 🚀 Deployment Scripts
+│   ├── nginx-staging.conf      # Nginx Config mit Auth
+│   ├── setup-staging-auth.sh   # Passwort-Setup Script
+│   └── STAGING_AUTH.md         # Auth Dokumentation
+│
+├── turbo.json                  # Turborepo Pipeline
+├── package.json                # Root Workspace
+├── bun.lock                    # Bun Lockfile
+└── .cursorrules                # Diese Datei!
+```
+
+---
+
+## 🔧 Tech Stack Übersicht
+
+### Frontend - Web
+- **Next.js 15** - React Framework mit SSR/ISR
+- **TypeScript** - Type Safety
+- **Tailwind CSS 3.4** - Utility-First Styling
+- **shadcn/ui** - Accessible UI Components
+- **next-intl 3.26** - Mehrsprachigkeit (DE/EN/ES)
+- **lucide-react** - Icons
+
+### Frontend - Mobile
+- **React Native** - Cross-Platform Mobile
+- **Expo** - RN Development Platform
+- **Expo Router** - Native Navigation
+- **NativeWind** - Tailwind für React Native
+- **TypeScript** - Type Safety
+
+### Backend
+- **Supabase** - PostgreSQL + Auth + Realtime
+- **API:** RESTful über Supabase
+- **Database:** PostgreSQL
+- **Auth:** Supabase Auth
+
+### DevOps/Build
+- **Turborepo** - Monorepo Task Orchestration
+- **Bun** - Fast Package Manager + Runtime
+- **Nginx** - Reverse Proxy + SSL
+- **PM2/Systemd** - Process Management
+
+### Styling System
+- **Base Colors:**
+  - Primary: `#14B8C4` (Teal)
+  - Secondary: `#F4EDE4` (Beige)
+  - Accent: `#FF6B6B` (Red)
+
+---
+
+## 🚀 Wichtige Commands
+
+### Root Commands (Turborepo)
+```bash
+bun install              # Dependencies installieren
+bun run dev              # Alle Apps parallel starten (watch mode)
+bun run build            # Production Build aller Apps
+bun run lint             # ESLint Check
+bun run type-check       # TypeScript Check
+bun run clean            # Clean Build Artifacts
+```
+
+### Web App Specific
+```bash
+cd apps/web
+bun run dev              # Next.js auf Port 3000
+bun run build            # Production Build
+bun run start            # Standalone Mode
+```
+
+### Mobile App Specific
+```bash
+cd apps/mobile
+bun run dev              # Expo Dev Server
+bun run build            # EAS Build
+```
+
+### Packages
+```bash
+cd packages/shared
+bun run build            # Build shared package
+```
+
+---
+
+## 📋 Internationalisierung (i18n)
+
+### Sprachen
+- **DE** (Deutsch) - `de.json`
+- **EN** (English) - `en.json`  
+- **ES** (Español) - `es.json`
+
+### Routing
+Die App nutzt **Dynamic Segment** `[lang]`:
+```
+/de → Deutsch
+/en → English
+/es → Español
+```
+
+### Komponenten-Verwendung
+```typescript
+import { useTranslations } from 'next-intl';
+
+export default function MyComponent() {
+  const t = useTranslations();
+  return <h1>{t('home.title')}</h1>;
+}
+```
+
+### Neue Übersetzungen hinzufügen
+1. Edit `packages/shared/src/i18n/de.json` (und en.json, es.json)
+2. Format: `{ "section.key": "Wert" }`
+3. Commit + Deploy
+
+---
+
+## 🎨 Styling Guidelines
+
+### Tailwind Klassen
+- **Responsive:** `md:`, `lg:`, `xl:` Prefixes
+- **Dark Mode:** Bereits konfiguriert mit `darkMode: ['class']`
+- **Custom Colors:** Definiert in `tailwind.config.ts`
+
+### shadcn/ui Components
+- Importieren von `@/components/ui/`
+- Beispiel: `Button`, `Input`, `Card`, `Dialog`
+- Vollständig typsicher mit TypeScript
+
+### CSS Modules vs Tailwind
+- **Bevorzugt:** Tailwind CSS Classes
+- **Fallback:** CSS Modules wenn nötig (`.module.css`)
+- **Global Styles:** `src/globals.css`
+
+---
+
+## 🔐 Authentifizierung & Datenbank
+
+### Supabase Client
+```typescript
+import { supabase } from '@repo/supabase';
+
+// Beispiel
+const { data, error } = await supabase
+  .from('table_name')
+  .select('*')
+  .eq('id', 1);
+```
+
+### Environment Variables
+**apps/web/.env.local:**
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://ayetwgaainiskwqvgubd.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key_here
+```
+
+**apps/mobile/.env.local:**
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://ayetwgaainiskwqvgubd.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_key_here
+```
+
+---
+
+## 📦 Shared Packages
+
+### @repo/shared
+- **i18n:** Übersetzungsdateien
+- **utils/date.ts:** Datum-Helpers
+- **utils/string.ts:** String-Utilities
+
+Import: `import { someUtil } from '@repo/shared';`
+
+### @repo/supabase
+- **client.ts:** Initialisierter Supabase Client
+- **types.ts:** Auto-Generated Types von DB
+
+Import: `import { supabase } from '@repo/supabase';`
+
+### @repo/typescript-config
+- **base.json:** Basis TS Config
+- **nextjs.json:** Für Web App
+- **react-native.json:** Für Mobile App
+
+---
+
+## 🚀 Staging Deployment
+
+### Passwortschutz
+- **URL:** `https://staging.mallorca-map.com`
+- **Username:** `staging`
+- **Password:** `9963`
+- **Setup:** Siehe `deploy/STAGING_AUTH.md`
+
+### 3-Layer Security
+1. **HTTP Basic Auth** (Nginx) - Blockiert 100% ohne Passwort
+2. **HTTP Headers** (X-Robots-Tag, Cache-Control)
+3. **robots.txt** - Blockiert Bots und Crawler
+
+### Deploy zur Staging
+```bash
+# 1. Code changes committen
+git add .
+git commit -m "message"
+git push origin main
+
+# 2. SSH zum Server
+ssh user@staging.mallorca-map.com
+
+# 3. Pull + Deploy
+cd /home/app/mallorca-map-next
+git pull origin main
+bun install && bun run build
+sudo systemctl restart mallorca-map-staging
+
+# 4. Nginx testen
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+---
+
+## ✅ Code Konventionen
+
+### TypeScript
+- **Strict Mode:** Aktiviert in `tsconfig.json`
+- **Typ-Annotationen:** Immer für Props und Returns
+- **Imports:** Alias `@/` verwenden statt `../../../`
+
+### Component Structure
+```typescript
+// Imports
+import { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
+
+// Types
+interface MyComponentProps {
+  title: string;
+  children?: ReactNode;
+}
+
+// Component
+export function MyComponent({ title, children }: MyComponentProps) {
+  return (
+    <div>
+      <Button>{title}</Button>
+      {children}
+    </div>
+  );
+}
+```
+
+### File Naming
+- **Components:** PascalCase (`Button.tsx`, `Card.tsx`)
+- **Utilities:** camelCase (`dateUtils.ts`, `stringHelpers.ts`)
+- **Types:** PascalCase (`User.ts`, `Product.ts`)
+
+### Folder Organization
+- Components grouped by feature/area
+- Related utils in same folder
+- Tests co-located with source files
+
+---
+
+## 🐛 Häufige Probleme & Lösungen
+
+### Turborepo Build Fehler
+```bash
+# Clear cache
+bun run clean
+
+# Rebuild
+bun run build
+```
+
+### Type Errors nach Änderungen
+```bash
+bun run type-check
+```
+
+### Module not found
+- Check imports are using `@/` alias
+- Ensure package.json has correct workspace reference
+- Run `bun install` in root
+
+### Styling nicht angewendet
+- Tailwind content paths in `tailwind.config.ts`
+- Check CSS ist in `globals.css` importiert
+- Clear `.next` folder: `rm -rf apps/web/.next`
+
+---
+
+## 🎯 Cursor AI Richtlinien
+
+### Wenn du Code debuggen sollst:
+1. **Lese zuerst** die relevante Datei komplett
+2. **Verstehe** die Komponenten-Hierarchie
+3. **Check** den Datenfluss (Props → State → Output)
+4. **Teste** deine Lösung mit den Commands oben
+
+### Wenn du neue Features bauen sollst:
+1. **Ask:** Sollte es in `apps/web` oder `apps/mobile`?
+2. **Check:** Kann Code in `packages/shared` wiederverwendet werden?
+3. **TypeScript:** Immer Typen definieren
+4. **Test:** Mit `bun run type-check && bun run lint`
+
+### Wenn du Komponenten erstellst:
+1. **Use:** shadcn/ui Components als Base
+2. **Style:** Mit Tailwind CSS
+3. **Accept Props:** Immer typisiert
+4. **Export:** Named Export, nicht default
+
+### Wenn du i18n Strings editierst:
+1. **Update:** Alle 3 JSON-Dateien (de/en/es)
+2. **Format:** Immer `"section.key": "value"`
+3. **Test:** Mit allen 3 Sprachen testen
+4. **Commit:** Mit aussagekräftigem Message
+
+### Wenn du Deployment-Issues hast:
+1. **Check:** SSH zum Server möglich?
+2. **Logs:** `sudo journalctl -u mallorca-map-staging -f`
+3. **Nginx:** `sudo nginx -t` vor reload
+4. **Bun:** `bun install && bun run build` in App-Folder
+
+---
+
+## 📚 Zusätzliche Ressourcen
+
+- **Next.js Docs:** https://nextjs.org/docs
+- **Tailwind Docs:** https://tailwindcss.com/docs
+- **shadcn/ui:** https://ui.shadcn.com/
+- **Turborepo:** https://turbo.build/
+- **Expo Docs:** https://docs.expo.dev/
+- **Supabase:** https://supabase.com/docs
+
+---
+
+## 🎓 Zusammenfassung für Claude/ChatGPT
+
+Wenn ich dir Code zum editieren gebe:
+1. ✅ Respektiere die Folder-Struktur
+2. ✅ Verwende TypeScript Typen
+3. ✅ Nutze Tailwind CSS für Styling
+4. ✅ Check Turborepo Dependencies
+5. ✅ Teste mit `bun run build` vor dem Commit
+6. ✅ Update diese `.cursorrules` wenn die Struktur sich ändert
+
+Wenn ich frage "Wie funktioniert X?":
+1. 📖 Zeige mir die relevanten Files
+2. 🔍 Erkläre den Datenfluss
+3. 📝 Code-Snippets mit Kontext
+4. 🧪 Wie man es testet
+
+Wenn ich sage "Mache einen Deploy":
+1. 🔧 Erkläre alle Schritte
+2. 🔐 Frage nach SSH-Zugängen wenn nötig
+3. 📋 Gib mir ein Checkliste
+4. ✨ Teste vor Produktiv-Deploy

@@ -1,0 +1,77 @@
+name: 🚀 Deploy zu Staging
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Manuell über GitHub UI triggerbar
+
+jobs:
+  deploy:
+    name: Deploy zu Hetzner Staging
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: ✅ Code auschecken
+        uses: actions/checkout@v4
+
+      - name: 🔧 Bun installieren
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.1.40
+
+      - name: 📦 Dependencies installieren
+        run: bun install
+
+      - name: 🏗️ Web App bauen
+        run: |
+          cd apps/web
+          bun run build
+
+      - name: 📤 Deploy zu Hetzner
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_PATH: /var/www/mallorca-map-next
+        run: |
+          # SSH Key einrichten
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null
+          
+          # Remote directory erstellen
+          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "mkdir -p $DEPLOY_PATH/apps/web"
+          
+          # Build-Artefakte kopieren
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" \
+            apps/web/.next/standalone/ \
+            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/
+          
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" \
+            apps/web/.next/static \
+            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/.next/
+          
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" \
+            apps/web/public/ \
+            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/public/
+          
+          # ecosystem.config kopieren
+          scp -i ~/.ssh/id_rsa apps/web/ecosystem.config.cjs \
+            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/
+          
+          # PM2 neu starten
+          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST << 'EOF'
+            cd $DEPLOY_PATH/apps/web
+            pm2 delete mallorca-map-staging 2>/dev/null || true
+            pm2 start ecosystem.config.cjs
+            pm2 save
+          EOF
+
+      - name: ✅ Deployment erfolgreich
+        run: echo "🎉 Deploy zu staging.mallorca-map.com abgeschlossen!"
+
+      - name: ❌ Deployment fehlgeschlagen
+        if: failure()
+        run: echo "⚠️ Deploy fehlgeschlagen - überprüfe die Logs!"
