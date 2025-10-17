@@ -1,0 +1,16 @@
+{
+    "common": {
+        "welcome": "Welcome to Mallorca Map",
+        "home": "Home",
+        "experiences": "Experiences & Tours",
+        "events": "Events & Parties",
+        "guide": "Guide",
+        "beaches": "Beaches",
+        "food": "Food & Drinks",
+        "locations": "Locations",
+        "services": "Services",
+        "loading": "Loading...",
+        "error": "Error",
+        "retry": "Try again"
+    }
+}

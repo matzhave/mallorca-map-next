@@ -1,0 +1,24 @@
+{
+    "name": "mallorca-map-next",
+    "version": "0.1.0",
+    "private": true,
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "dev": "turbo dev",
+        "build": "turbo build",
+        "lint": "turbo lint",
+        "type-check": "turbo type-check",
+        "clean": "turbo clean && rm -rf node_modules"
+    },
+    "devDependencies": {
+        "turbo": "^2.3.3",
+        "typescript": "^5.7.2"
+    },
+    "packageManager": "bun@1.1.40",
+    "engines": {
+        "node": ">=20.0.0"
+    }
+}

@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Mallorca Map",
+    "slug": "mallorca-map",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#14B8C4"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mallorcamap.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#14B8C4"
+      },
+      "package": "com.mallorcamap.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "SUPABASE_URL": "https://ayetwgaainiskwqvgubd.supabase.co",
+      "SUPABASE_ANON_KEY": "your_anon_key_here"
+    },
+    "plugins": ["expo-router"]
+  }
+}
+
