@@ -139,7 +139,128 @@ export function MyPage() {
 }
 ```
 
-✅ Component ist typsicher und reusable!
+✅ Komponenten sind typsicher und reusable!
+
+---
+
+## 🔀 Monorepo-Strategie: Shared vs App-Spezifisch
+
+### Die goldene Regel: 🧠 Teile die Logik, nicht die UI
+
+```
+@repo/shared = Gehirn (Logik)
+apps/web = Web-UI (Browser)
+apps/mobile = Mobile-UI (Native)
+```
+
+### ✅ MUSS in `@repo/shared`:
+- **Types** - `User`, `Activity`, `ApiResponse`
+- **Logik** - Berechnungen, Validierung, Formatierung
+- **DB Queries** - Supabase Fetch-Funktionen
+- **i18n** - Alle Übersetzungen (DE/EN/ES)
+- **Constants** - `CATEGORIES`, `LOCALES`, etc.
+
+### ❌ GEHÖRT NICHT in shared:
+- **UI Components** (Web braucht `<button>`, Mobile braucht `<TouchableOpacity>`)
+- **Pages/Screens** (Platform-spezifisch)
+- **Styling** (Tailwind vs NativeWind)
+- **Navigation** (URL vs Stack Navigator)
+
+### 🔄 Beispiel-Workflow: Activity-Feature
+
+#### 1️⃣ Type in Shared
+```typescript
+// packages/shared/src/types.ts
+export interface Activity {
+  id: string;
+  title: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  duration_minutes: number;
+}
+```
+
+#### 2️⃣ Logik in Shared
+```typescript
+// packages/shared/src/utils/activityUtils.ts
+import { supabase } from '@repo/supabase';
+
+export async function getActivityById(id: string): Promise<Activity | null> {
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('id', id)
+    .single();
+  return data as Activity;
+}
+
+export function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+}
+```
+
+#### 3️⃣ i18n in Shared
+```json
+// packages/shared/src/i18n/de.json
+{
+  "activity.difficulty.easy": "Leicht",
+  "activity.difficulty.medium": "Mittel",
+  "activity.difficulty.hard": "Schwer",
+  "activity.duration": "Dauer"
+}
+```
+
+#### 4️⃣ Web Component (APP-SPEZIFISCH)
+```typescript
+// apps/web/src/components/ActivityCard.tsx
+import { Activity, formatDuration } from '@repo/shared';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
+export function ActivityCard({ activity }: { activity: Activity }) {
+  return (
+    <Card className="bg-white p-4 rounded-lg shadow-md">
+      <h3 className="font-bold">{activity.title}</h3>
+      <div className="flex gap-2 mt-2">
+        <Badge>{activity.difficulty}</Badge>
+        <Badge variant="outline">{formatDuration(activity.duration_minutes)}</Badge>
+      </div>
+    </Card>
+  );
+}
+```
+
+#### 5️⃣ Mobile Component (APP-SPEZIFISCH)
+```typescript
+// apps/mobile/components/ActivityCard.tsx
+import { Activity, formatDuration } from '@repo/shared';
+import { View, Text } from 'react-native';
+
+export function ActivityCard({ activity }: { activity: Activity }) {
+  return (
+    <View className="bg-white p-4 rounded-lg">
+      <Text className="font-bold text-lg">{activity.title}</Text>
+      <Text className="text-gray-600 mt-2">
+        {activity.difficulty} • {formatDuration(activity.duration_minutes)}
+      </Text>
+    </View>
+  );
+}
+```
+
+---
+
+## 📋 Checkliste für Neue Features
+
+Bevor du codetest, stelle sicher:
+
+- [ ] Type in `packages/shared/src/types.ts`
+- [ ] Logik in `packages/shared/src/utils/`
+- [ ] i18n Keys in **ALLEN 3 JSON** Dateien (de.json, en.json, es.json)
+- [ ] Web Component in `apps/web/src/components/`
+- [ ] Mobile Component in `apps/mobile/components/`
+- [ ] Beides testet? `bun run build`
 
 ---
 
