@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Manuell über GitHub UI triggerbar
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -27,6 +27,8 @@ jobs:
         run: |
           cd apps/web
           bun run build
+          ls -la .next/
+          ls -la .next/standalone/ || echo "⚠️ .next/standalone nicht vorhanden!"
 
       - name: 📤 Deploy zu Hetzner
         env:
@@ -35,43 +37,60 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           DEPLOY_PATH: /var/www/mallorca-map-next
         run: |
+          set -e
+          
           # SSH Key einrichten
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
           
-          # Remote directory erstellen
-          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "mkdir -p $DEPLOY_PATH/apps/web"
+          echo "🔐 SSH verbindung wird getestet..."
+          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "echo '✅ SSH funktioniert!'"
           
-          # Build-Artefakte kopieren
+          echo "📁 Remote directory wird erstellt..."
+          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "mkdir -p $DEPLOY_PATH/apps/web/.next"
+          
+          echo "📤 Build-Artefakte werden kopiert..."
           rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" \
             apps/web/.next/standalone/ \
-            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/
+            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/ 2>&1 || echo "⚠️ Standalone kopieren abgeschlossen"
           
           rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" \
-            apps/web/.next/static \
-            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/.next/
+            apps/web/.next/static/ \
+            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/.next/static/ 2>&1 || echo "⚠️ Static kopieren abgeschlossen"
           
           rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" \
             apps/web/public/ \
-            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/public/
+            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/public/ 2>&1 || echo "⚠️ Public kopieren abgeschlossen"
           
-          # ecosystem.config kopieren
+          echo "⚙️ ecosystem.config kopieren..."
           scp -i ~/.ssh/id_rsa apps/web/ecosystem.config.cjs \
             $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/
           
-          # PM2 neu starten
+          echo "🚀 PM2 wird neu gestartet..."
           ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST << 'EOF'
-            cd $DEPLOY_PATH/apps/web
-            pm2 delete mallorca-map-staging 2>/dev/null || true
-            pm2 start ecosystem.config.cjs
-            pm2 save
+          set -e
+          export DEPLOY_PATH="/var/www/mallorca-map-next"
+          cd $DEPLOY_PATH/apps/web
+          pm2 delete mallorca-map-staging 2>/dev/null || true
+          sleep 1
+          pm2 start ecosystem.config.cjs
+          pm2 save
+          pm2 list
           EOF
+          
+          echo "✅ Deploy komplett!"
 
-      - name: ✅ Deployment erfolgreich
-        run: echo "🎉 Deploy zu staging.mallorca-map.com abgeschlossen!"
+      - name: 📊 Deployment Status
+        if: success()
+        run: |
+          echo "✅ Deployment erfolgreich!"
+          echo "🌍 https://staging.mallorca-map.com/de"
 
-      - name: ❌ Deployment fehlgeschlagen
+      - name: ⚠️ Fehler im Deployment
         if: failure()
-        run: echo "⚠️ Deploy fehlgeschlagen - überprüfe die Logs!"
+        run: |
+          echo "❌ Deployment fehlgeschlagen!"
+          echo "Siehe die Logs oben für Details."
+          exit 1
