@@ -57,3 +57,89 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 - **Backend**: Supabase
 - **Package Manager**: Bun
 
+---
+
+## 🚀 Deployment
+
+### Staging Environment
+
+**URL:** `https://staging.mallorca-map.com`  
+**Auth:** `staging / 9963`
+
+### Deployment Flow (⭐ READ THIS!)
+
+```
+📌 HAUPTWEG: GitHub Actions (automatisch)
+├─ Du lokal: code ändern & committen
+├─ Du: "Deploy die neue Version!"
+├─ Claude: git push origin main → GitHub
+├─ GitHub Actions triggert automatisch
+│  ├─ bun install
+│  ├─ bun run build
+│  ├─ sudo systemctl restart
+│  └─ nginx reload
+└─ ✅ Live!
+
+🔴 NEBENWEG: SSH (nur Ausnahmefälle!)
+├─ Logs checken
+├─ Status prüfen
+├─ Pakete updaten
+└─ ❌ NIEMALS für reguläres Deployment!
+```
+
+### Deploy durchführen
+
+```bash
+# 1. Code-Changes lokal machen & committen (NICHT pushen!)
+git add .
+git commit -m "feature: xyz"
+
+# 2. Sag mir Bescheid:
+# "Deploy die neue Version!"
+
+# 3. Ich mache:
+# - git push origin main
+# - GitHub Actions läuft automatisch
+# - ✅ Deployed!
+```
+
+**Das war's!** Deployment ist vollautomatisch über GitHub Actions.
+
+---
+
+## 📚 Dokumentation
+
+- **`.cursorrules`** - Cursor AI Richtlinien & Tech Stack
+- **`ARCHITECTURE.md`** - Tiefe technische Doku
+- **`QUICKSTART.md`** - Schnelleinstieg für Entwickler
+- **`DEPLOYMENT.md`** - Detaillierte Deployment-Anleitung
+- **`.github/workflows/deploy-staging.yml`** - GitHub Actions Config
+- **`deploy/SSH_SETUP.md`** - SSH für Ausnahmefälle
+
+---
+
+## 🧪 Testing
+
+```bash
+# Type-Check
+bun run type-check
+
+# Linting
+bun run lint
+
+# Full Build
+bun run build
+
+# Clean Build
+bun run clean
+```
+
+---
+
+## 🆘 Support
+
+- Schau in `QUICKSTART.md` für häufige Aufgaben
+- Lese `ARCHITECTURE.md` für technische Details
+- Check `DEPLOYMENT.md` für Deployment-Details
+- SSH Issues: `deploy/SSH_SETUP.md`
+

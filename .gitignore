@@ -51,3 +51,21 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# 🔐 Deployment & SSH
+.env.deployment
+.env.local
+.env.*.local
+deploy/.env
+
+# SSH Keys (falls lokal gelagert - empfohlen ist ~/.ssh)
+private_key
+*.pem
+
+# AWS/Cloud Credentials
+.aws/
+.env.aws
+
+# Secrets Management
+.vault
+secrets/
+

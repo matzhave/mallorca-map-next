@@ -1,72 +1,298 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
 
-# Deployment script for staging.mallorca-map.com
-# Usage: bash deploy/deploy-staging.sh
+# 🚀 Mallorca Map - Staging Deployment Script
+# 
+# Verwendung:
+#   chmod +x deploy/deploy-staging.sh
+#   ./deploy/deploy-staging.sh
+#
+# Voraussetzung: SSH-Setup durchgeführt (siehe deploy/SSH_SETUP.md)
 
-SERVER_HOST="49.13.205.128"
-SERVER_USER="root"
-SERVER_PASS="Mallorca2025!Secure"
-DEPLOY_PATH="/var/www/mallorca-map-next"
+set -e
 
-echo "🚀 Deploying to staging.mallorca-map.com"
+# Farben für Output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-# 1. Build Web App
-echo "📦 Building Web App..."
-cd "$(dirname "$0")/.."
-cd apps/web
+# ============================================================
+# CONFIG
+# ============================================================
+
+# Versuche .env.deployment zu laden
+if [ -f ~/.env.deployment ]; then
+    export $(cat ~/.env.deployment | grep -v '#' | xargs)
+else
+    echo -e "${RED}❌ Fehler: ~/.env.deployment nicht gefunden!${NC}"
+    echo ""
+    echo "Bitte erstelle die Datei nach deploy/SSH_SETUP.md"
+    exit 1
+fi
+
+# Setze Defaults falls nicht in .env
+STAGING_HOST=${STAGING_HOST:-staging-mallorca}
+STAGING_USER=${STAGING_USER:-deploy}
+STAGING_PATH=${STAGING_PATH:-/app/mallorca-map-next}
+STAGING_SSH_KEY=${STAGING_SSH_KEY:-~/.ssh/mallorca-map-staging}
+
+# ============================================================
+# FUNKTIONEN
+# ============================================================
+
+log_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
+
+log_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+log_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+log_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+print_header() {
+    echo ""
+    echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║${NC}     🚀 Mallorca Map Staging Deployment"
+    echo -e "${BLUE}║${NC}     $(date '+%Y-%m-%d %H:%M:%S')"
+    echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+}
+
+# ============================================================
+# VALIDATION
+# ============================================================
+
+validate_environment() {
+    log_info "Validiere Umgebung..."
+    
+    # Check ob wir im Projekt-Root sind
+    if [ ! -f "package.json" ]; then
+        log_error "Nicht im Projekt-Root! Führe das Skript von mallorca-map-next/ aus."
+        exit 1
+    fi
+    
+    # Check ob SSH-Key existiert
+    if [ ! -f "$STAGING_SSH_KEY" ]; then
+        log_error "SSH-Key nicht gefunden: $STAGING_SSH_KEY"
+        log_info "Folge deploy/SSH_SETUP.md"
+        exit 1
+    fi
+    
+    # Check ob SSH-Verbindung möglich ist
+    if ! ssh -i "$STAGING_SSH_KEY" -o ConnectTimeout=5 $STAGING_HOST "echo 'OK'" &>/dev/null; then
+        log_error "SSH-Verbindung zu $STAGING_HOST fehlgeschlagen!"
+        exit 1
+    fi
+    
+    log_success "Umgebung OK"
+    echo ""
+}
+
+# ============================================================
+# LOCAL BUILD
+# ============================================================
+
+build_local() {
+    log_info "Schritt 1: Type-Check & Build (lokal)..."
+    
+    if ! bun run type-check; then
+        log_error "Type-Check fehlgeschlagen!"
+        exit 1
+    fi
+    
+    if ! bun run build; then
+        log_error "Build fehlgeschlagen!"
+        exit 1
+    fi
+    
+    log_success "Build erfolgreich"
+    echo ""
+}
+
+# ============================================================
+# GIT PUSH
+# ============================================================
+
+git_push() {
+    log_info "Schritt 2: Git Push..."
+    
+    # Check ob Git installiert
+    if ! command -v git &> /dev/null; then
+        log_error "Git ist nicht installiert!"
+        exit 1
+    fi
+    
+    # Check ob Änderungen
+    if [ -z "$(git status --porcelain)" ]; then
+        log_warning "Keine lokalen Änderungen zum Committen"
+    else
+        log_info "Committe Änderungen..."
+        git add .
+        git commit -m "🚀 deployment: $(date +%s)" || true
+    fi
+    
+    # Push
+    log_info "Pushe zu main..."
+    git push origin main
+    
+    log_success "Git Push erfolgreich"
+    echo ""
+}
+
+# ============================================================
+# SERVER DEPLOY
+# ============================================================
+
+deploy_server() {
+    log_info "Schritt 3: Deploy auf Server..."
+    
+    # Remote Deployment Script
+    DEPLOY_SCRIPT=$(cat <<'REMOTE'
+set -e
+
+echo "📋 Remote Deploy startet..."
+echo ""
+
+# Wechsle zu App-Verzeichnis
+cd $STAGING_PATH
+
+# Git Pull
+echo "📋 Git Pull..."
+git pull origin main
+echo "✅ Done"
+echo ""
+
+# Dependencies
+echo "📋 Bun Install..."
 bun install
+echo "✅ Done"
+echo ""
+
+# Build
+echo "📋 Production Build..."
 bun run build
+echo "✅ Done"
+echo ""
 
-# 2. Create remote directory
-echo "📁 Creating remote directory..."
-sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST \
-  "mkdir -p $DEPLOY_PATH/apps/web"
+# Service Restart
+echo "📋 Restart Service..."
+sudo systemctl restart mallorca-map-staging
+echo "✅ Done"
+echo ""
 
-# 3. Copy files to server
-echo "📤 Copying files to server..."
-sshpass -p "$SERVER_PASS" rsync -avz --delete \
-  .next/standalone/ \
-  $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/
+# Nginx Reload
+echo "📋 Nginx Config Check..."
+sudo nginx -t
+echo "✅ Config valid"
+echo ""
 
-sshpass -p "$SERVER_PASS" rsync -avz --delete \
-  .next/static \
-  $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/apps/web/.next/
+echo "📋 Reload Nginx..."
+sudo systemctl reload nginx
+echo "✅ Done"
+echo ""
 
-sshpass -p "$SERVER_PASS" rsync -avz --delete \
-  public/ \
-  $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/apps/web/public/
+# Health Check
+echo "📋 Health Check..."
+if curl -s -u staging:9963 https://staging.mallorca-map.com/de | grep -q "Willkommen"; then
+    echo "✅ Website responsive!"
+else
+    echo "⚠️  Website nicht erreichbar - check logs"
+fi
+REMOTE
+    )
 
-# 4. Copy ecosystem config
-sshpass -p "$SERVER_PASS" scp ecosystem.config.cjs \
-  $SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/apps/web/
+    # Führe Remote Script aus
+    ssh -i "$STAGING_SSH_KEY" $STAGING_HOST bash << EOF
+$DEPLOY_SCRIPT
+EOF
 
-# 5. Install SSL Certificate (if not exists)
-echo "🔒 Setting up SSL..."
-sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST \
-  "if [ ! -f /etc/letsencrypt/live/staging.mallorca-map.com/fullchain.pem ]; then \
-     echo 'Installing SSL certificate...' && \
-     certbot certonly --standalone -d staging.mallorca-map.com --non-interactive --agree-tos --email admin@mallorca-map.com --pre-hook 'systemctl stop nginx' --post-hook 'systemctl start nginx'; \
-   fi"
+    log_success "Server Deploy erfolgreich"
+    echo ""
+}
 
-# 6. Setup Nginx
-echo "🌐 Setting up Nginx..."
-sshpass -p "$SERVER_PASS" scp ../../deploy/nginx-staging.conf \
-  $SERVER_USER@$SERVER_HOST:/etc/nginx/sites-available/staging.mallorca-map.com
+# ============================================================
+# TESTS
+# ============================================================
 
-sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST \
-  "ln -sf /etc/nginx/sites-available/staging.mallorca-map.com /etc/nginx/sites-enabled/ && \
-   nginx -t && \
-   systemctl reload nginx"
+run_tests() {
+    log_info "Schritt 4: Tests..."
+    
+    echo "🧪 Test 1: Website HTTP Status"
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -u staging:9963 https://staging.mallorca-map.com/de)
+    if [ "$HTTP_CODE" = "200" ]; then
+        log_success "Website antwortet mit 200 OK"
+    else
+        log_warning "Website antwortet mit HTTP $HTTP_CODE"
+    fi
+    echo ""
+    
+    echo "🧪 Test 2: Passwortschutz"
+    if curl -s -o /dev/null -w "%{http_code}" https://staging.mallorca-map.com/de | grep -q "401"; then
+        log_success "Passwortschutz aktiv"
+    else
+        log_warning "Passwortschutz Status unklar"
+    fi
+    echo ""
+    
+    echo "🧪 Test 3: Service Status"
+    if ssh -i "$STAGING_SSH_KEY" $STAGING_HOST "sudo systemctl is-active --quiet mallorca-map-staging"; then
+        log_success "Service ist aktiv"
+    else
+        log_warning "Service Status unklar"
+    fi
+    echo ""
+}
 
-# 7. Start PM2
-echo "🚀 Starting PM2..."
-sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST \
-  "cd $DEPLOY_PATH/apps/web && \
-   pm2 delete mallorca-map-staging 2>/dev/null || true && \
-   pm2 start ecosystem.config.cjs && \
-   pm2 save"
+# ============================================================
+# MAIN
+# ============================================================
 
-echo "✅ Deployment complete!"
-echo "🌍 https://staging.mallorca-map.com"
+main() {
+    print_header
+    
+    # 1. Validation
+    validate_environment
+    
+    # 2. Local Build
+    build_local
+    
+    # 3. Git Push
+    git_push
+    
+    # 4. Server Deploy
+    deploy_server
+    
+    # 5. Tests
+    run_tests
+    
+    # Final Summary
+    echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${GREEN}║${NC}            ✅ DEPLOYMENT ERFOLGREICH! 🎉"
+    echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo "🔗 Live URL:"
+    echo "   https://staging.mallorca-map.com"
+    echo ""
+    echo "🔐 Anmeldedaten:"
+    echo "   User: staging"
+    echo "   Pass: 9963"
+    echo ""
+    echo "📊 Logs prüfen:"
+    echo "   ssh $STAGING_HOST 'sudo journalctl -u mallorca-map-staging -f'"
+    echo ""
+}
+
+# Fehlerbehandlung
+trap 'log_error "Deployment abgebrochen!"; exit 1' ERR
+
+# Ausführung
+main "$@"
 

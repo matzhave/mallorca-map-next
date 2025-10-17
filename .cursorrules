@@ -757,3 +757,121 @@ bun run type-check
 ### Wenn du i18n Strings editierst:
 1. **Update:** Alle 3 JSON-Dateien (de/en/es)
 2. **Format:** Immer `"section.key": "value"`
+
+---
+
+## 🎓 Zusammenfassung für Claude/ChatGPT
+
+Wenn ich dir Code zum editieren gebe:
+1. ✅ Respektiere die Folder-Struktur
+2. ✅ Verwende TypeScript Typen
+3. ✅ Nutze Tailwind CSS für Styling
+4. ✅ Check Turborepo Dependencies
+5. ✅ Teste mit `bun run build` vor dem Commit
+6. ✅ Update diese `.cursorrules` wenn die Struktur sich ändert
+
+Wenn ich frage "Wie funktioniert X?":
+1. 📖 Zeige mir die relevanten Files
+2. 🔍 Erkläre den Datenfluss
+3. 📝 Code-Snippets mit Kontext
+4. 🧪 Wie man es testet
+
+Wenn ich sage "Mache einen Deploy":
+1. 🔧 Erkläre alle Schritte
+2. 🔐 Frage nach SSH-Zugängen wenn nötig
+3. 📋 Gib mir ein Checkliste
+4. ✨ Teste vor Produktiv-Deploy
+
+---
+
+## 🚀 DEPLOYMENT RULES (⭐ WICHTIG!)
+
+### Deployment-Flow (IMMER befolgen!)
+
+```
+HAUPTWEG: GitHub Actions (automatisch)
+├─ User: Code-Änderungen lokal
+├─ User: "Deploy die neue Version!"
+├─ Claude: git push origin main
+├─ GitHub Actions triggert automatisch
+└─ ✅ Deployed!
+
+NEBENWEG: SSH (NUR für Ausnahmefälle!)
+├─ Logs checken
+├─ Status prüfen
+├─ Pakete updaten
+└─ Emergency-Fixes
+```
+
+### ✅ WAS CLAUDE MACHT bei "Deploy!":
+
+1. **Git Push (mit GitHub Token)**
+   ```bash
+   git push origin main
+   ```
+
+2. **GitHub Actions wartet** (triggert automatisch)
+   - bun install
+   - bun run build
+   - sudo systemctl restart
+   - nginx reload
+
+3. **SSH Health-Check (optional)**
+   ```bash
+   # Logs checken
+   sudo journalctl -u mallorca-map-staging -f
+   
+   # Status prüfen
+   sudo systemctl status mallorca-map-staging
+   ```
+
+4. **Report:** "✅ Deployed & Live!"
+
+### ❌ WAS CLAUDE NICHT MACHT:
+
+- ❌ Direkt SSH zum Deployen (nur GitHub Actions!)
+- ❌ Manuell `git pull` auf Server (GitHub Actions macht das)
+- ❌ Manuell `bun build` auf Server (GitHub Actions macht das)
+- ❌ GitHub umgehen (immer GitHub Actions benutzen!)
+
+### 🔴 SSH wird nur benutzt für:
+
+```bash
+# ✅ Logs
+sudo journalctl -u mallorca-map-staging -f
+
+# ✅ Status
+sudo systemctl status mallorca-map-staging
+ps aux | grep node
+
+# ✅ Packages
+sudo apt update && sudo apt upgrade
+
+# ✅ Nginx-Config
+sudo nginx -t
+sudo systemctl reload nginx
+
+# ✅ Emergency-Fix (falls GA kaputt)
+cd /app/mallorca-map-next && git pull && bun build
+```
+
+### 📋 Deployment Checklist:
+
+Vor Deploy:
+- [ ] Code lokal getestet (`bun run build` erfolgreich)
+- [ ] `bun run type-check` OK
+- [ ] Git commits sauber
+
+Nach Deploy:
+- [ ] GitHub Actions erfolgreich (grüner Haken)
+- [ ] Website antwortet (curl Test)
+- [ ] Logs OK (journalctl)
+
+---
+
+## 📚 Deployment Dokumentation
+
+- **`DEPLOYMENT.md`** - Vollständige Deployment-Anleitung
+- **`.github/workflows/deploy-staging.yml`** - GitHub Actions Config
+- **`deploy/SSH_SETUP.md`** - SSH für Notfälle
+- **`README.md`** - Quick Deploy Flow

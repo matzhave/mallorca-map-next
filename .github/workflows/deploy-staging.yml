@@ -1,96 +1,92 @@
-name: 🚀 Deploy zu Staging
+name: 🚀 Deploy to Staging
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+
+env:
+  SERVER_HOST: 49.13.205.128
+  SERVER_USER: root
+  DEPLOY_PATH: /app/mallorca-map-next
 
 jobs:
   deploy:
-    name: Deploy zu Hetzner Staging
     runs-on: ubuntu-latest
     
     steps:
-      - name: ✅ Code auschecken
+      - name: 📋 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔧 Bun installieren
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.1.40
-
-      - name: 📦 Dependencies installieren
-        run: bun install
-
-      - name: 🏗️ Web App bauen
+      - name: 🔑 Setup SSH Key
         run: |
-          cd apps/web
-          bun run build
-          ls -la .next/
-          ls -la .next/standalone/ || echo "⚠️ .next/standalone nicht vorhanden!"
-
-      - name: 📤 Deploy zu Hetzner
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          DEPLOY_PATH: /var/www/mallorca-map-next
-        run: |
-          set -e
-          
-          # SSH Key einrichten
           mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
-          
-          echo "🔐 SSH verbindung wird getestet..."
-          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "echo '✅ SSH funktioniert!'"
-          
-          echo "📁 Remote directory wird erstellt..."
-          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "mkdir -p $DEPLOY_PATH/apps/web/.next"
-          
-          echo "📤 Build-Artefakte werden kopiert..."
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" \
-            apps/web/.next/standalone/ \
-            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/ 2>&1 || echo "⚠️ Standalone kopieren abgeschlossen"
-          
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" \
-            apps/web/.next/static/ \
-            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/.next/static/ 2>&1 || echo "⚠️ Static kopieren abgeschlossen"
-          
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" \
-            apps/web/public/ \
-            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/public/ 2>&1 || echo "⚠️ Public kopieren abgeschlossen"
-          
-          echo "⚙️ ecosystem.config kopieren..."
-          scp -i ~/.ssh/id_rsa apps/web/ecosystem.config.cjs \
-            $SSH_USER@$SSH_HOST:$DEPLOY_PATH/apps/web/
-          
-          echo "🚀 PM2 wird neu gestartet..."
-          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST << 'EOF'
-          set -e
-          export DEPLOY_PATH="/var/www/mallorca-map-next"
-          cd $DEPLOY_PATH/apps/web
-          pm2 delete mallorca-map-staging 2>/dev/null || true
-          sleep 1
-          pm2 start ecosystem.config.cjs
-          pm2 save
-          pm2 list
-          EOF
-          
-          echo "✅ Deploy komplett!"
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: 📊 Deployment Status
+      - name: 🚀 Deploy to Server
+        run: |
+          ssh -i ~/.ssh/deploy_key $SERVER_USER@$SERVER_HOST << 'EOF'
+          set -e
+          
+          echo "📋 Deploying Mallorca Map Staging..."
+          echo ""
+          
+          # Navigate to app directory
+          cd $DEPLOY_PATH
+          
+          # Git Pull
+          echo "📥 Pulling latest code from GitHub..."
+          git pull origin main
+          echo "✅ Code pulled"
+          echo ""
+          
+          # Dependencies
+          echo "📦 Installing dependencies..."
+          bun install
+          echo "✅ Dependencies installed"
+          echo ""
+          
+          # Build
+          echo "🔨 Building application..."
+          bun run build
+          echo "✅ Build successful"
+          echo ""
+          
+          # Restart Service
+          echo "🔄 Restarting service..."
+          sudo systemctl restart mallorca-map-staging
+          echo "✅ Service restarted"
+          echo ""
+          
+          # Reload Nginx
+          echo "🌐 Reloading Nginx..."
+          sudo nginx -t && sudo systemctl reload nginx
+          echo "✅ Nginx reloaded"
+          echo ""
+          
+          # Health Check
+          echo "🧪 Running health checks..."
+          sleep 2
+          if curl -s -u staging:9963 https://staging.mallorca-map.com/de | grep -q "Willkommen"; then
+            echo "✅ Website is responsive!"
+          else
+            echo "⚠️  Website status check inconclusive"
+          fi
+          echo ""
+          echo "🎉 Deployment completed successfully!"
+          EOF
+
+      - name: ✅ Deployment Success
         if: success()
         run: |
-          echo "✅ Deployment erfolgreich!"
-          echo "🌍 https://staging.mallorca-map.com/de"
+          echo "✅ Staging deployment completed!"
+          echo "🔗 URL: https://staging.mallorca-map.com"
+          echo "🔐 Username: staging / Password: 9963"
 
-      - name: ⚠️ Fehler im Deployment
+      - name: ❌ Deployment Failed
         if: failure()
         run: |
-          echo "❌ Deployment fehlgeschlagen!"
-          echo "Siehe die Logs oben für Details."
+          echo "❌ Deployment failed! Check logs above."
           exit 1
