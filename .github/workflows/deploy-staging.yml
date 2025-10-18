@@ -90,7 +90,7 @@ jobs:
           # Health Check
           echo "🧪 Running health checks..."
           sleep 2
-          if curl -s -u staging:9963 https://staging.mallorca-map.com/de | grep -q "Willkommen"; then
+          if curl -s -u admin:9963 https://staging.mallorca-map.com/de | grep -q "Mallorca"; then
             echo "✅ Website is responsive!"
           else
             echo "⚠️  Website status check inconclusive"
@@ -104,7 +104,7 @@ jobs:
         run: |
           echo "✅ Staging deployment completed!"
           echo "🔗 URL: https://staging.mallorca-map.com"
-          echo "🔐 Username: staging / Password: 9963"
+          echo "🔐 Username: admin / Password: 9963"
 
       - name: ❌ Deployment Failed
         if: failure()
