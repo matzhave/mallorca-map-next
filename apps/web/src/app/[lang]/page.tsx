@@ -1,5 +1,5 @@
-import { useTranslations } from 'next-intl';
 import { supabase } from '@repo/supabase';
+import { getTranslations } from 'next-intl/server';
 
 export default async function HomePage({
   params,
@@ -7,6 +7,7 @@ export default async function HomePage({
   params: Promise<{ lang: string }>; // Next.js 15: params is a Promise
 }) {
   const { lang } = await params;
+  const t = await getTranslations();
     // Fetch categories to test DB connection
     const { data: categories } = await supabase
         .from('categories')
@@ -27,16 +28,16 @@ export default async function HomePage({
                 <div className="text-center mb-12">
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
                         <span className="text-primary font-semibold">
-                            ⭐ Die #1 Mallorca Plattform
+                            ⭐ {t('home.hero_tagline')}
                         </span>
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                        Entdecke Mallorca
+                        {t('home.hero_title')}
                     </h1>
 
                     <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                        Die besten Erlebnisse, Events und Dienstleister auf der Insel
+                        {t('home.hero_subtitle')}
                     </p>
 
                     {/* Search Bar Placeholder */}
@@ -44,11 +45,11 @@ export default async function HomePage({
                         <div className="bg-white rounded-2xl shadow-2xl p-6">
                             <input
                                 type="text"
-                                placeholder="z. B. Bootstour Palma, Beach Club, Restaurant"
+                                placeholder={t('home.search_placeholder')}
                                 className="w-full px-6 py-4 text-lg border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
                             />
                             <button className="w-full mt-4 px-6 py-4 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors">
-                                Suchen
+                                {t('home.search_button')}
                             </button>
                         </div>
                     </div>
@@ -60,18 +61,18 @@ export default async function HomePage({
             <div className="text-4xl font-bold text-primary mb-2">
               {placesCount || 0}
             </div>
-            <div className="text-gray-600">Einträge</div>
+            <div className="text-gray-600">{t('home.stats_entries')}</div>
           </div>
                     <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
                         <div className="text-4xl font-bold text-primary mb-2">0</div>
-                        <div className="text-gray-600">Bewertungen</div>
+                        <div className="text-gray-600">{t('home.stats_reviews')}</div>
                     </div>
                 </div>
 
                 {/* Categories */}
                 <div className="mb-16">
                     <h2 className="text-3xl font-bold text-center mb-8">
-                        Kategorien entdecken
+                        {t('home.popular_categories')}
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {categories?.map((category) => (
