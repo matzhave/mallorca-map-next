@@ -64,12 +64,22 @@ bun run build
 
 ## Environment
 
+### Lokal (Development)
 Erstelle `.env.local` in `apps/web/` und `apps/mobile/`:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://ayetwgaainiskwqvgubd.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://tjmorebgbxfqyxketbwr.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 ```
+
+**Wichtig:** `.env.local` ist in `.gitignore` und wird nie committed!
+
+### Staging/Production Server
+`.env.local` ist **dauerhaft auf dem Server** unter:
+- `/app/mallorca-map-next/apps/web/.env.local`
+
+**Secrets ändern?** Siehe [`DEPLOYMENT.md`](./DEPLOYMENT.md) → "Secrets/Environment Variables ändern"
 
 ## Tech Stack
 

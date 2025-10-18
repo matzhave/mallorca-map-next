@@ -35,7 +35,7 @@ Vollständige Dokumentation zum Deployment der Staging-Umgebung.
    │  ├─ cd /app/mallorca-map-next
    │  ├─ git pull origin main
    │  ├─ bun install
-   │  ├─ bun run build
+   │  ├─ bun run build (nutzt .env.local auf Server)
    │  ├─ sudo systemctl restart mallorca-map-staging
    │  └─ sudo nginx -t && reload
    └─ Health Check
@@ -47,6 +47,18 @@ Vollständige Dokumentation zum Deployment der Staging-Umgebung.
 
 ✅ Live auf https://staging.mallorca-map.com
 ```
+
+### 🔐 Environment Variables Management
+
+**Lösung:** `.env.local` ist **dauerhaft auf dem Server** gespeichert!
+
+**Vorteile:**
+- ✅ Secrets nur auf Server (maximale Sicherheit)
+- ✅ Keine Secrets in GitHub/Git
+- ✅ Schnelleres Deployment (keine Übertragung nötig)
+- ✅ Einmalig setup, läuft dann für immer
+
+**Location:** `/app/mallorca-map-next/apps/web/.env.local`
 
 ---
 
