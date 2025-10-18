@@ -53,6 +53,18 @@ jobs:
           echo "✅ Dependencies installed"
           echo ""
           
+          # Create .env.local for build
+          echo "🔐 Setting up environment variables..."
+          cat > apps/web/.env.local << 'ENV_EOF'
+NEXT_PUBLIC_SUPABASE_URL=https://tjmorebgbxfqyxketbwr.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqbW9yZWJnYnhmcXl4a2V0YndyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4MDA4MzMsImV4cCI6MjA3NjM3NjgzM30.XWYBRWYBmyxueWfSo4Hs2f5DkfNUdTDivEgJIX5PqJY
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqbW9yZWJnYnhmcXl4a2V0YndyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDgwMDgzMywiZXhwIjoyMDc2Mzc2ODMzfQ.rmw9BBcZ3jWavtIz-195r-hptZGwo8i6FxJ-iIWJKIk
+NEXT_PUBLIC_SITE_URL=https://staging.mallorca-map.com
+NEXT_PUBLIC_ENV=production
+ENV_EOF
+          echo "✅ Environment configured"
+          echo ""
+          
           # Build
           echo "🔨 Building application..."
           bun run build
