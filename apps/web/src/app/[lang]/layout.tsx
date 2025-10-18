@@ -1,35 +1,38 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { locales } from '@/i18n';
+import { deTranslations, enTranslations, esTranslations } from '@repo/shared';
 
 export function generateStaticParams() {
-    return locales.map((locale) => ({ lang: locale }));
+  return locales.map((locale) => ({ lang: locale }));
 }
 
+// Translation map
+const translations = {
+  de: deTranslations,
+  en: enTranslations,
+  es: esTranslations,
+};
+
 export default async function LocaleLayout({
-    children,
-    params,
+  children,
+  params,
 }: {
-    children: React.ReactNode;
-    params: { lang: string };
+  children: React.ReactNode;
+  params: Promise<{ lang: string }>; // Next.js 15: params is a Promise
 }) {
-    const { lang } = params;
+  const { lang } = await params;
 
-    // Validate locale
-    if (!locales.includes(lang as any)) {
-        notFound();
-    }
+  // Validate locale
+  if (!locales.includes(lang as any)) {
+    notFound();
+  }
 
-    let messages;
-    try {
-        messages = (await import(`@repo/shared/i18n/${lang}.json`)).default;
-    } catch (error) {
-        notFound();
-    }
+  const messages = translations[lang as keyof typeof translations];
 
-    return (
-        <NextIntlClientProvider locale={lang} messages={messages}>
-            {children}
-        </NextIntlClientProvider>
-    );
+  return (
+    <NextIntlClientProvider locale={lang} messages={messages}>
+      {children}
+    </NextIntlClientProvider>
+  );
 }

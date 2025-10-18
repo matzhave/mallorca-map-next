@@ -2,10 +2,11 @@ import { useTranslations } from 'next-intl';
 import { supabase } from '@repo/supabase';
 
 export default async function HomePage({
-    params,
+  params,
 }: {
-    params: { lang: string };
+  params: Promise<{ lang: string }>; // Next.js 15: params is a Promise
 }) {
+  const { lang } = await params;
     // Fetch categories to test DB connection
     const { data: categories } = await supabase
         .from('categories')
@@ -14,10 +15,10 @@ export default async function HomePage({
         .order('sort_order')
         .limit(10);
 
-    // Fetch platform stats
-    const { data: stats } = await supabase
-        .from('places')
-        .select('id', { count: 'exact', head: true });
+  // Fetch platform stats (count)
+  const { count: placesCount } = await supabase
+    .from('places')
+    .select('*', { count: 'exact', head: true });
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-secondary to-white">
@@ -55,12 +56,12 @@ export default async function HomePage({
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto mb-16">
-                    <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-                        <div className="text-4xl font-bold text-primary mb-2">
-                            {stats?.count || 0}
-                        </div>
-                        <div className="text-gray-600">Einträge</div>
-                    </div>
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="text-4xl font-bold text-primary mb-2">
+              {placesCount || 0}
+            </div>
+            <div className="text-gray-600">Einträge</div>
+          </div>
                     <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
                         <div className="text-4xl font-bold text-primary mb-2">0</div>
                         <div className="text-gray-600">Bewertungen</div>
@@ -73,10 +74,10 @@ export default async function HomePage({
                         Kategorien entdecken
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        {categories?.map((category) => (
-                            <a
-                                key={category.id}
-                                href={`/${params.lang}/${category.slug_de}`}
+            {categories?.map((category) => (
+              <a
+                key={category.id}
+                href={`/${lang}/${category.slug_de}`}
                                 className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow group"
                             >
                                 <div
