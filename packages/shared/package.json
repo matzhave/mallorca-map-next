@@ -12,6 +12,9 @@
     "lint": "eslint . --max-warnings 0",
     "type-check": "tsc --noEmit"
   },
+  "dependencies": {
+    "@repo/supabase": "workspace:*"
+  },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "typescript": "^5.9.3"
