@@ -13,16 +13,12 @@ const config: Config = {
                 background: 'hsl(var(--background))',
                 foreground: 'hsl(var(--foreground))',
                 primary: {
-                    DEFAULT: '#14B8C4',
+                    DEFAULT: '#1DAAB9',
                     foreground: '#ffffff',
                 },
                 secondary: {
-                    DEFAULT: '#F4EDE4',
+                    DEFAULT: '#FFF5E6',
                     foreground: '#1a1a1a',
-                },
-                accent: {
-                    DEFAULT: 'hsl(360 100% 70%)',
-                    foreground: '#ffffff',
                 },
                 destructive: {
                     DEFAULT: 'hsl(0 84% 60%)',
