@@ -147,6 +147,7 @@ git push origin main
 - **`QUICKSTART.md`** - Schnelleinstieg für Entwickler
 - **`DEPLOYMENT.md`** - Detaillierte Deployment-Anleitung
 - **`MONOREPO_GUIDE.md`** - Monorepo Best Practices
+- **`MONOREPO_TROUBLESHOOTING.md`** - 🔧 **Häufige Probleme & Lösungen** (NEU!)
 - **`supabase/README.md`** - Datenbank Schema & Migrations
 
 ### Deployment:
