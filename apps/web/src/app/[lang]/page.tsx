@@ -3,6 +3,90 @@ import { getTranslations } from 'next-intl/server';
 import { Calendar, MapPin, Clock, Euro, Star } from 'lucide-react';
 import Image from 'next/image';
 
+// Mock category data - später aus DB
+const categoryItems = [
+    {
+        id: '1',
+        name: 'Wassersport',
+        icon: '🌊',
+        image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&q=80',
+        count: 45,
+        color: '#14B8C4',
+    },
+    {
+        id: '2',
+        name: 'Events & Partys',
+        icon: '🎉',
+        image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400&q=80',
+        count: 78,
+        color: '#F97316',
+    },
+    {
+        id: '3',
+        name: 'Restaurants',
+        icon: '🍽️',
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80',
+        count: 156,
+        color: '#EF4444',
+    },
+    {
+        id: '4',
+        name: 'Strände',
+        icon: '🏖️',
+        image: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&q=80',
+        count: 32,
+        color: '#10B981',
+    },
+    {
+        id: '5',
+        name: 'Wandern',
+        icon: '🥾',
+        image: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80',
+        count: 67,
+        color: '#8B5CF6',
+    },
+    {
+        id: '6',
+        name: 'Sehenswürdigkeiten',
+        icon: '🏛️',
+        image: 'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&q=80',
+        count: 89,
+        color: '#F59E0B',
+    },
+    {
+        id: '7',
+        name: 'Wellness & Spa',
+        icon: '💆',
+        image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&q=80',
+        count: 23,
+        color: '#EC4899',
+    },
+    {
+        id: '8',
+        name: 'Beach Clubs',
+        icon: '🍹',
+        image: 'https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?w=400&q=80',
+        count: 41,
+        color: '#06B6D4',
+    },
+    {
+        id: '9',
+        name: 'Bootstouren',
+        icon: '⛵',
+        image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
+        count: 34,
+        color: '#3B82F6',
+    },
+    {
+        id: '10',
+        name: 'Shopping',
+        icon: '🛍️',
+        image: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=400&q=80',
+        count: 52,
+        color: '#A855F7',
+    },
+];
+
 // Mock trending data - später aus DB
 const trendingItems = [
     {
@@ -71,8 +155,8 @@ export default async function HomePage({
     let placesCount: number | null = null;
 
     // For development/preview: Use mock data if Supabase is not configured
-    const hasSupabaseConfig = 
-        process.env.NEXT_PUBLIC_SUPABASE_URL && 
+    const hasSupabaseConfig =
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
         process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co';
 
     if (hasSupabaseConfig) {
@@ -180,8 +264,84 @@ export default async function HomePage({
                 </div>
             </section>
 
-            {/* Trending Section */}
+            {/* Categories Section */}
             <section className="bg-white py-16">
+                <div className="container mx-auto px-4">
+                    {/* Section Header */}
+                    <div className="mb-8 text-center md:mb-12">
+                        <h2 className="mb-3 text-3xl font-bold text-[#1A3B47] md:text-4xl">
+                            {t('home.popular_categories')}
+                        </h2>
+                        <p className="text-lg text-gray-600">
+                            Entdecke die beliebtesten Kategorien auf Mallorca
+                        </p>
+                    </div>
+
+                    {/* Categories Grid - 5 per row on desktop */}
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 md:gap-6">
+                        {categoryItems.map((category) => (
+                            <div
+                                key={category.id}
+                                className="group relative cursor-pointer overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:shadow-2xl"
+                            >
+                                {/* Background Image */}
+                                <div className="relative h-48">
+                                    <Image
+                                        src={category.image}
+                                        alt={category.name}
+                                        fill
+                                        className="object-cover brightness-75 transition-all duration-500 group-hover:scale-110 group-hover:brightness-50"
+                                    />
+                                    {/* Gradient Overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                                </div>
+
+                                {/* Content */}
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+                                    {/* Icon */}
+                                    <div className="mb-3 text-5xl transition-transform duration-300 group-hover:scale-125">
+                                        {category.icon}
+                                    </div>
+
+                                    {/* Name */}
+                                    <h3 className="mb-2 text-lg font-bold text-white drop-shadow-lg">
+                                        {category.name}
+                                    </h3>
+
+                                    {/* Count */}
+                                    <div className="rounded-full bg-white/90 px-3 py-1 backdrop-blur-sm">
+                                        <span className="text-sm font-semibold text-gray-900">
+                                            {category.count} Einträge
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Hover Arrow */}
+                                <div className="absolute right-3 top-3 translate-x-10 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+                                    <div className="rounded-full bg-white/90 p-2 backdrop-blur-sm">
+                                        <svg
+                                            className="h-5 w-5 text-gray-900"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M9 5l7 7-7 7"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Trending Section */}
+            <section className="bg-gray-50 py-16">
                 <div className="container mx-auto px-4">
                     {/* Section Header */}
                     <div className="mb-8 text-center md:mb-12">

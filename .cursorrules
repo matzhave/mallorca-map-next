@@ -118,10 +118,15 @@ mallorca-map-next/                    # ROOT WORKSPACE
 
 ### Farben
 ```css
---primary: #14B8C4      /* Teal/Türkis */
---secondary: #F4EDE4    /* Beige/Crema */
---accent: #FF6B6B       /* Coral/Rot */
+--primary: #1DAAB9      /* Türkis (rgb(29, 170, 185)) */
+--secondary: #FFF5E6    /* Beige/Crema (rgb(255, 245, 230)) */
 ```
+
+**Hero Gradient:**
+```
+bg-gradient-to-br from-primary/10 via-secondary to-primary/5
+```
+*Sanfter Farbverlauf von transparent-türkis über beige zu leicht-türkis*
 
 ### Typography
 - **Font:** Inter (Variable Font)

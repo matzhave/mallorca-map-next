@@ -8,7 +8,7 @@ export default function HomeScreen() {
         <Text className="text-3xl font-bold text-gray-900 mb-4">
           Willkommen bei Mallorca Map
         </Text>
-        
+
         <Text className="text-lg text-gray-600 mb-8">
           Dein umfassender Guide für Mallorca
         </Text>
@@ -23,7 +23,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <View className="bg-accent p-6 rounded-lg">
+          <View className="bg-primary p-6 rounded-lg">
             <Text className="text-xl font-semibold text-white mb-2">
               Events & Partys
             </Text>

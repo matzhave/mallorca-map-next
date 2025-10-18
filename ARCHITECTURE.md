@@ -1009,9 +1009,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: '#14B8C4',      // Teal
-        secondary: '#F4EDE4',    // Beige
-        accent: '#FF6B6B',       // Red
+        primary: '#1DAAB9',      // Türkis (rgb(29, 170, 185))
+        secondary: '#FFF5E6',    // Beige/Crema (rgb(255, 245, 230))
       },
     },
   },

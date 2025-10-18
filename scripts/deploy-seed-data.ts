@@ -14,8 +14,8 @@ async function deploySeedData() {
     console.log('📁 Inserting categories...');
 
     const categories = [
-        { slug: 'tours', slug_de: 'touren-erlebnisse', slug_en: 'tours-experiences', slug_es: 'tours-experiencias', name_de: 'Touren & Erlebnisse', name_en: 'Tours & Experiences', name_es: 'Tours & Experiencias', icon: 'Compass', color: '#14B8C4', sort_order: 1 },
-        { slug: 'events', slug_de: 'events-partys', slug_en: 'events-parties', slug_es: 'eventos-fiestas', name_de: 'Events & Partys', name_en: 'Events & Parties', name_es: 'Eventos & Fiestas', icon: 'Calendar', color: '#FF6B6B', sort_order: 2 },
+        { slug: 'tours', slug_de: 'touren-erlebnisse', slug_en: 'tours-experiences', slug_es: 'tours-experiencias', name_de: 'Touren & Erlebnisse', name_en: 'Tours & Experiences', name_es: 'Tours & Experiencias', icon: 'Compass', color: '#1DAAB9', sort_order: 1 },
+        { slug: 'events', slug_de: 'events-partys', slug_en: 'events-parties', slug_es: 'eventos-fiestas', name_de: 'Events & Partys', name_en: 'Events & Parties', name_es: 'Eventos & Fiestas', icon: 'Calendar', color: '#1DAAB9', sort_order: 2 },
         { slug: 'food', slug_de: 'essen-trinken', slug_en: 'food-drink', slug_es: 'comida-bebida', name_de: 'Essen & Trinken', name_en: 'Food & Drink', name_es: 'Comida & Bebida', icon: 'UtensilsCrossed', color: '#F4A460', sort_order: 3 },
         { slug: 'sights', slug_de: 'sehenswuerdigkeiten', slug_en: 'sights', slug_es: 'lugares-interes', name_de: 'Sehenswürdigkeiten', name_en: 'Sights', name_es: 'Lugares de Interés', icon: 'Landmark', color: '#9B59B6', sort_order: 4 },
         { slug: 'services', slug_de: 'dienstleistungen', slug_en: 'services', slug_es: 'servicios', name_de: 'Dienstleistungen', name_en: 'Services', name_es: 'Servicios', icon: 'Wrench', color: '#3498DB', sort_order: 5 },

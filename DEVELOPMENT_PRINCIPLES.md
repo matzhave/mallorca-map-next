@@ -233,10 +233,15 @@ export function calculateDistance(
 ### Farben
 
 ```css
---primary: #14B8C4 (Türkis)
---secondary: #F4EDE4 (Beige/Crema)
---accent: #FF6B6B (Koralle/Rot)
+--primary: #1DAAB9 (Türkis - rgb(29, 170, 185))
+--secondary: #FFF5E6 (Beige/Crema - rgb(255, 245, 230))
 ```
+
+**Hero Gradient:**
+```
+bg-gradient-to-br from-primary/10 via-secondary to-primary/5
+```
+*Von mallorca-map.com übernommen - sanfter Verlauf*
 
 ### Typography
 
