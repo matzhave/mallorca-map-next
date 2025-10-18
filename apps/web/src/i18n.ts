@@ -17,12 +17,13 @@ const messages = {
 
 export default getRequestConfig(async ({ locale }) => {
   // Validate that the incoming `locale` parameter is valid
-  if (!locale || !locales.includes(locale as any)) {
-    notFound();
-  }
+  // If invalid, use default locale instead of throwing 404
+  const validLocale = (locale && locales.includes(locale as any)) 
+    ? locale 
+    : defaultLocale;
 
   return {
-    locale: locale as string,
-    messages: messages[locale as Locale],
+    locale: validLocale as string,
+    messages: messages[validLocale as Locale],
   };
 });
