@@ -1,155 +1,657 @@
-# Cursor AI Rules für Mallorca Map Monorepo
+# 🏗️ Cursor AI Rules - Mallorca Map Monorepo
 
-## 🔴 KRITISCH: Entwicklungs-Prinzipien (ABSOLUT BINDEND!)
-
-> **Diese Regeln haben HÖCHSTE PRIORITÄT. Sie überschreiben alle anderen Überlegungen.**
-
-### ⚠️ NIEMALS Kompromisse eingehen!
-
-❌ **VERBOTEN:**
-- Pfusch-Lösungen, Workarounds, Quick Fixes
-- Abkürzungen die später Probleme verursachen
-- "Funktioniert erstmal" ohne langfristig zu denken
-- Technische Schulden für Geschwindigkeit
-
-✅ **PFLICHT:**
-- **Immer** die professionelle, skalierbare Lösung wählen
-- **Immer** State-of-the-Art Best Practices folgen
-- **Immer** Probleme an der Root Cause lösen, nicht umgehen
-- **Immer** langfristig denken (10+ Jahre Projekt-Lebensdauer)
-
-### 📖 Beispiel aus diesem Projekt:
-
-**Problem:** PostGIS Extension `geography` Type nicht gefunden
-
-❌ **FALSCH:** Einfach `latitude`/`longitude` Spalten nutzen (funktioniert, aber nicht optimal für Geo-Queries)
-
-✅ **RICHTIG:** PostGIS korrekt konfigurieren:
-1. Extension im `extensions` Schema aktivieren
-2. `search_path` setzen damit Types gefunden werden
-3. `gen_random_uuid()` statt `uuid_generate_v4()` nutzen (Postgres built-in)
-4. Dokumentieren warum und wie
-
-**Ergebnis:** Optimale Performance für Nearby-Queries, ST_Distance, Spatial Indexes
+> **DIESE DATEI IST DEINE BIBEL - Alles was du wissen musst ist hier!**  
+> Konsolidiert aus: README.md, QUICKSTART.md, MONOREPO_GUIDE.md, ARCHITECTURE.md, DEVELOPMENT_PRINCIPLES.md, DEPLOYMENT.md
 
 ---
 
-**📚 Vollständige Prinzipien:** Siehe `DEVELOPMENT_PRINCIPLES.md`
+# 🔴 SEKTION 1: KRITISCHE REGELN (ÜBERGEORDNET!)
+
+## ⚠️ THE GOLDEN RULES (Nichts ist wichtiger!)
+
+### 1. **NIEMALS git push selbst machen!**
+- ❌ Claude darf NICHT: `git push origin main`
+- ✅ NUR der User (Matthias) darf pushen!
+- 🔴 **GRUND:** Deployment geht SOFORT LIVE nach Push via GitHub Actions!
+- **Workflow:** Claude committet lokal → "Bereit zum Push!" → User pusht → Auto-Deploy
+
+### 2. **KEINE Kompromisse, Pfusch-Lösungen, Workarounds**
+- ❌ Quick Fixes die später Probleme erzeugen
+- ❌ "Funktioniert erstmal" ohne langfristig zu denken
+- ✅ IMMER die professionelle, skalierbare Lösung
+- ✅ IMMER State-of-the-Art Best Practices
+- **Langfristig denken:** Dieses Projekt läuft 10+ Jahre!
+
+### 3. **Root Cause lösen, nicht umgehen**
+- Bei Problemen: Analysieren → Recherchieren → Richtig implementieren → Dokumentieren
+- Beispiel: PostGIS `geography` Type nicht gefunden?
+  - ❌ FALSCH: Einfach `latitude/longitude` Spalten nutzen
+  - ✅ RICHTIG: PostGIS korrekt konfigurieren (extensions, search_path, etc.)
+
+### 4. **Shared vs App-Spezifisch - STRIKT TRENNEN!**
+- Dies ist das WICHTIGSTE Konzept des Monorepo!
+- Siehe **SEKTION 3: MONOREPO STRUKTUR**
+
+### 5. **TypeScript Strict Mode - IMMER!**
+- ❌ NIEMALS `any` Type verwenden
+- ✅ IMMER fully typed (Props, Returns, Variables)
+- Strict Mode ist aktiviert in `tsconfig.json`
 
 ---
 
-## 🎯 Projekt-Kontext
+# 📁 SEKTION 2: PROJEKT-KONTEXT (Wissen für jeden Befehl!)
+
+## 🎯 Projekt-Details
 
 **Name:** Mallorca Map Next  
 **Typ:** Full-Stack Monorepo mit Web + Mobile  
 **Package Manager:** Bun 1.1.40+  
 **Node Version:** >=20.0.0  
-**Build Tool:** Turborepo 2.3.3+
+**Build Tool:** Turborepo 2.3.3+  
+**Status:** 🚧 Aktive Entwicklung  
 
 ---
 
-## 📁 Monorepo-Struktur
+## 📊 Monorepo-Struktur (JEDERZEIT DENKEN!)
 
 ```
-mallorca-map-next/
+mallorca-map-next/                    # ROOT WORKSPACE
 ├── apps/
-│   ├── web/                    # 🌐 Next.js 15 Web App (SSR/ISR)
-│   │   ├── src/
-│   │   │   ├── app/            # App Router mit [lang] Dynamic Routing
-│   │   │   ├── components/     # React Components (shadcn/ui)
-│   │   │   ├── lib/            # Utilities (utils.ts)
-│   │   │   ├── i18n.ts         # Internationalisierung
-│   │   │   ├── globals.css     # Global Tailwind Styles
-│   │   │   └── public/         # Static Assets + robots.txt
-│   │   ├── next.config.mjs     # Next.js Config
-│   │   ├── tailwind.config.ts  # Tailwind Setup mit shadcn/ui
-│   │   ├── postcss.config.js   # PostCSS Config
-│   │   ├── tsconfig.json       # TS Config
-│   │   └── package.json
+│   ├── web/                         # 🌐 Next.js 15 (SSR/ISR)
+│   │   ├── src/app/[lang]/         # App Router mit Dynamic Segments (de/en/es)
+│   │   ├── src/components/         # React Components (shadcn/ui)
+│   │   ├── src/lib/utils.ts        # Utilities
+│   │   ├── tailwind.config.ts      # Tailwind Setup
+│   │   └── .env.local              # Secrets (in .gitignore, SERVER ONLY!)
 │   │
-│   └── mobile/                 # 📱 React Native Expo App
-│       ├── app/                # Expo Router (Native Stack)
-│       ├── components/         # Native Components
-│       ├── assets/             # Images, Fonts
-│       ├── tailwind.config.js  # NativeWind Config
-│       ├── babel.config.js     # Metro Bundler Config
-│       ├── app.json            # Expo Config
-│       └── package.json
+│   └── mobile/                      # 📱 React Native Expo
+│       ├── app/                     # Expo Router (Native Stack)
+│       ├── components/              # Native Components
+│       ├── tailwind.config.js       # NativeWind Config
+│       └── .env.local               # Secrets (in .gitignore, SERVER ONLY!)
 │
 ├── packages/
-│   ├── shared/                 # 📦 Shared Utilities
-│   │   ├── src/
-│   │   │   ├── i18n/           # Translations (de.json, en.json, es.json)
-│   │   │   ├── utils/          # date.ts, string.ts
-│   │   │   └── index.ts
-│   │   └── package.json
+│   ├── shared/                      # 📦 **Shared Utilities (GEHIRN!)**
+│   │   ├── src/types.ts            # Types & Interfaces (alle!)
+│   │   ├── src/utils/              # Pure Functions & Logik
+│   │   ├── src/queries/            # Supabase Services
+│   │   ├── src/i18n/               # Translations (de.json, en.json, es.json)
+│   │   ├── src/constants.ts        # Constants & Enums
+│   │   └── package.json            # "@repo/shared"
 │   │
-│   ├── supabase/               # 🗄️ Supabase Client + Types
-│   │   ├── src/
-│   │   │   ├── client.ts       # Supabase Client Init
-│   │   │   ├── types.ts        # Generated Types
-│   │   │   └── index.ts
-│   │   └── package.json
+│   ├── supabase/                    # 🗄️ Supabase Client
+│   │   ├── src/client.ts           # Supabase Initialization
+│   │   ├── src/types.ts            # Generated Types
+│   │   └── package.json            # "@repo/supabase"
 │   │
-│   └── typescript-config/      # ⚙️ Shared TS Configs
-│       ├── base.json           # Base Config
-│       ├── nextjs.json         # Next.js Config
-│       ├── react-native.json   # React Native Config
+│   └── typescript-config/           # ⚙️ Shared TS Configs
+│       ├── base.json               # Base Config
+│       ├── nextjs.json             # For Web
+│       ├── react-native.json       # For Mobile
 │       └── package.json
 │
-├── deploy/                     # 🚀 Deployment Scripts
-│   ├── nginx-staging.conf      # Nginx Config mit Auth
-│   ├── setup-staging-auth.sh   # Passwort-Setup Script
-│   └── STAGING_AUTH.md         # Auth Dokumentation
-│
-├── turbo.json                  # Turborepo Pipeline
-├── package.json                # Root Workspace
-├── bun.lock                    # Bun Lockfile
-└── .cursorrules                # Diese Datei!
+├── turbo.json                       # Turborepo Pipeline
+├── .cursorrules                     # Diese Datei! 📖
+└── package.json                     # Root Config
+
 ```
 
 ---
 
-## 🔧 Tech Stack Übersicht
+## 🔧 Tech Stack
 
-### Frontend - Web
-- **Next.js 15** - React Framework mit SSR/ISR
-- **TypeScript** - Type Safety
-- **Tailwind CSS 3.4** - Utility-First Styling
-- **shadcn/ui** - Accessible UI Components
-- **next-intl 3.26** - Mehrsprachigkeit (DE/EN/ES)
-- **lucide-react** - Icons
-
-### Frontend - Mobile
-- **React Native** - Cross-Platform Mobile
-- **Expo** - RN Development Platform
-- **Expo Router** - Native Navigation
-- **NativeWind** - Tailwind für React Native
-- **TypeScript** - Type Safety
-
-### Backend
-- **Supabase** - PostgreSQL + Auth + Realtime
-- **API:** RESTful über Supabase
-- **Database:** PostgreSQL
-- **Auth:** Supabase Auth
-
-### DevOps/Build
-- **Turborepo** - Monorepo Task Orchestration
-- **Bun** - Fast Package Manager + Runtime
-- **Nginx** - Reverse Proxy + SSL
-- **PM2/Systemd** - Process Management
-
-### Styling System
-- **Base Colors:**
-  - Primary: `#14B8C4` (Teal)
-  - Secondary: `#F4EDE4` (Beige)
-  - Accent: `#FF6B6B` (Red)
+| Bereich | Technologie | Version |
+|---------|-------------|---------|
+| **Monorepo** | Turborepo | 2.3.3+ |
+| **Package Manager** | Bun | 1.1.40+ |
+| **Web Frontend** | Next.js 15 | App Router |
+| **Web Styling** | Tailwind CSS + shadcn/ui | 3.4 |
+| **Mobile** | React Native + Expo | Latest |
+| **Mobile Styling** | NativeWind | Tailwind für RN |
+| **i18n** | next-intl + Custom JSON | DE/EN/ES |
+| **Backend** | Supabase (PostgreSQL) | REST + Realtime |
+| **Icons** | lucide-react / lucide-react-native | Latest |
 
 ---
 
-## 🚀 Wichtige Commands
+## 🎨 Design System
 
-### Root Commands (Turborepo)
+### Farben
+```css
+--primary: #14B8C4      /* Teal/Türkis */
+--secondary: #F4EDE4    /* Beige/Crema */
+--accent: #FF6B6B       /* Coral/Rot */
+```
+
+### Typography
+- **Font:** Inter (Variable Font)
+- **Scale:** Fluid Typography (clamp)
+- **Line Height:** 1.5 (Body), 1.2 (Headings)
+
+### Spacing
+- **Base:** 4px (0.25rem)
+- **Container:** max-w-7xl (1280px)
+- **Grid:** 12 Columns
+
+### Modern UI Practices
+- ✅ Dark Mode Support (konfiguriert: `darkMode: ['class']`)
+- ✅ Responsive First (Mobile → Tablet → Desktop)
+- ✅ Accessible (WCAG 2.1 AA)
+- ✅ shadcn/ui Components (Radix-based)
+- ✅ Tailwind Utility Classes
+
+---
+
+## 📖 Sprachen & i18n
+
+**Unterstützte Sprachen:** Deutsch (de), English (en), Español (es)
+
+**URL-Struktur:**
+- `/de/...` → Deutsch
+- `/en/...` → English
+- `/es/...` → Español
+
+**i18n Dateien:**
+- `packages/shared/src/i18n/de.json` - Deutsch
+- `packages/shared/src/i18n/en.json` - English
+- `packages/shared/src/i18n/es.json` - Español
+
+**Format:** `{ "section.key": "Wert" }`
+
+**⚠️ WICHTIG:** Neue Keys MÜSSEN in **ALLE 3 Dateien** hinzugefügt werden!
+
+---
+
+# 🚀 SEKTION 3: MONOREPO-ARCHITEKTUR (KERNKONZEPT!)
+
+## Mental Model
+
+```
+┌─────────────────────────────────────────┐
+│    @repo/shared = DAS GEHIRN             │
+│    (Logik, Types, Daten, i18n)          │
+│                                         │
+│  • Types & Interfaces (alle!)           │
+│  • Business Logic (Berechnungen)        │
+│  • Supabase Queries (Services)          │
+│  • Validierungen                        │
+│  • Formatierungsfunktionen              │
+│  • i18n Strings (DE/EN/ES!)             │
+│  • Constants & Enums                    │
+└─────────────────────────────────────────┘
+           ↙                     ↘
+    ┌──────────────┐      ┌──────────────┐
+    │ apps/web     │      │apps/mobile   │
+    │ DIE AUGEN    │      │  DIE AUGEN   │
+    │              │      │              │
+    │ • React Cmp  │      │• RN Cmp      │
+    │ • shadcn/ui  │      │• NativeWind  │
+    │ • Tailwind   │      │• Tailwind    │
+    │ • Pages      │      │• Screens     │
+    │ • Routing    │      │• Navigator   │
+    │ • HTML/CSS   │      │• Native View │
+    └──────────────┘      └──────────────┘
+```
+
+**Kernprinzip:** Teile die Logik zwischen Apps, halte die UI platform-spezifisch!
+
+---
+
+## ✅ SHARED PACKAGE (@repo/shared) - WAS GEHÖRT REIN?
+
+### 1. **Types & Interfaces (IMMER!)**
+
+```typescript
+// packages/shared/src/types.ts
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url?: string;
+}
+
+export interface Activity {
+  id: string;
+  title: string;
+  category: 'hiking' | 'beach' | 'culture';
+  location: { lat: number; lng: number };
+  difficulty: 'easy' | 'medium' | 'hard';
+  duration_minutes: number;
+  rating: number;
+  image_url: string;
+}
+
+export type ApiResponse<T> = {
+  data?: T;
+  error?: string;
+  timestamp: string;
+};
+```
+
+**✅ Grund:** Beide Apps nutzen die gleichen Datentypen von der Datenbank.
+
+### 2. **Geschäftslogik & Berechnungen**
+
+```typescript
+// packages/shared/src/utils/math.ts
+export function calculateDistance(
+  lat1: number, lng1: number,
+  lat2: number, lng2: number
+): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+// packages/shared/src/utils/format.ts
+export function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins}min`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}min`;
+}
+
+export function getDifficultyColor(difficulty: string): {bg: string; text: string} {
+  switch (difficulty) {
+    case 'easy': return {bg: 'bg-green-100', text: 'text-green-800'};
+    case 'medium': return {bg: 'bg-yellow-100', text: 'text-yellow-800'};
+    case 'hard': return {bg: 'bg-red-100', text: 'text-red-800'};
+    default: return {bg: 'bg-gray-100', text: 'text-gray-800'};
+  }
+}
+```
+
+**✅ Grund:** Diese Logik ist in Web UND Mobile identisch. Warum zweimal schreiben?
+
+### 3. **Supabase Queries & Services**
+
+```typescript
+// packages/shared/src/queries/activities.ts
+import { supabase } from '@repo/supabase';
+import type { Activity } from '../types';
+
+export async function getActivityById(id: string): Promise<Activity | null> {
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) return null;
+  return data as Activity;
+}
+
+export async function getActivitiesByCategory(category: string): Promise<Activity[]> {
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('category', category)
+    .order('rating', {ascending: false});
+  
+  return (data as Activity[]) || [];
+}
+
+export function subscribeToActivityChanges(callback: (activity: Activity) => void) {
+  return supabase
+    .on('postgres_changes', 
+      {event: 'INSERT', schema: 'public', table: 'activities'},
+      (payload) => callback(payload.new as Activity)
+    )
+    .subscribe();
+}
+```
+
+**✅ Grund:** DB-Queries sind nicht UI-spezifisch. Beide Apps fragen die gleichen Daten ab.
+
+### 4. **Internationalisierung (i18n)**
+
+```json
+{
+  "activity.title": "Aktivität",
+  "activity.difficulty": "Schwierigkeit",
+  "activity.difficulty.easy": "Leicht",
+  "activity.difficulty.medium": "Mittel",
+  "activity.difficulty.hard": "Schwer",
+  "category.hiking": "Wanderung",
+  "category.beach": "Strand",
+  "category.culture": "Kultur"
+}
+```
+
+**⚠️ KRITISCH:** Alle Keys in **ALLE 3 Dateien!** (de.json, en.json, es.json)
+
+### 5. **Constants & Enums**
+
+```typescript
+// packages/shared/src/constants.ts
+export const ACTIVITY_CATEGORIES = ['hiking', 'beach', 'culture'] as const;
+export const DIFFICULTY_LEVELS = ['easy', 'medium', 'hard'] as const;
+export const SUPPORTED_LOCALES = ['de', 'en', 'es'] as const;
+
+export const APP_CONFIG = {
+  MAX_TITLE_LENGTH: 100,
+  MAX_DESCRIPTION_LENGTH: 1000,
+  DEFAULT_MAP_ZOOM: 12,
+  DEFAULT_LOCATION: { lat: 39.5696, lng: 2.6502 },
+} as const;
+```
+
+**✅ Grund:** Diese Werte sind überall gleich.
+
+---
+
+## ❌ APP-SPEZIFISCH - WAS GEHÖRT NICHT IN SHARED?
+
+### ❌ 1. UI-Komponenten (NIEMALS!)
+
+```typescript
+// ❌ FALSCH - Bitte NICHT in @repo/shared!
+// packages/shared/src/components/Button.tsx
+export function Button({ children }) {
+  return <button>{children}</button>; // ❌ HTML - Web only!
+}
+```
+
+**✅ RICHTIG - Separate Komponenten pro App:**
+
+```typescript
+// apps/web/src/components/Button.tsx (React)
+import { Button as UiButton } from '@/components/ui/button';
+export function Button({ children, onClick }) {
+  return <UiButton onClick={onClick}>{children}</UiButton>;
+}
+
+// apps/mobile/components/Button.tsx (React Native)
+import { TouchableOpacity, Text } from 'react-native';
+export function Button({ children, onPress }) {
+  return (
+    <TouchableOpacity className="bg-primary px-4 py-2 rounded" onPress={onPress}>
+      <Text className="text-white font-bold">{children}</Text>
+    </TouchableOpacity>
+  );
+}
+```
+
+**Grund:** Web nutzt HTML `<button>`, Mobile nutzt `<TouchableOpacity>`. Nicht kompatibel!
+
+### ❌ 2. Pages & Screens
+
+```typescript
+// ❌ FALSCH
+// packages/shared/src/pages/Home.tsx - NEIN!
+
+// ✅ RICHTIG
+// apps/web/src/app/[lang]/page.tsx - Web Page
+// apps/mobile/app/index.tsx - Mobile Screen
+```
+
+**Grund:** Routing ist völlig unterschiedlich (Next.js File-based vs Expo Navigator).
+
+### ❌ 3. Styling & CSS
+
+```typescript
+// ❌ FALSCH - Nicht in shared!
+// packages/shared/src/components/Card.tsx
+export function Card() {
+  return <div className="p-4 rounded-lg">...</div>; // ❌ Tailwind in shared!
+}
+
+// ✅ RICHTIG - Separate in jeder App
+// apps/web/src/components/Card.tsx
+export function Card() {
+  return <div className="bg-white p-4 rounded-lg shadow-md">...</div>;
+}
+
+// apps/mobile/components/Card.tsx
+export function Card() {
+  return <View className="bg-white p-4 rounded-lg">...</View>;
+}
+```
+
+**Grund:** Web nutzt Tailwind CSS, Mobile nutzt NativeWind. Unterschiedliche Systeme!
+
+### ❌ 4. Navigation & Routing
+
+```typescript
+// ❌ FALSCH
+// packages/shared/src/router.ts - Bitte nicht!
+
+// ✅ RICHTIG
+// apps/web/src/app/[lang]/... - Next.js File-based Routing
+// apps/mobile/app/_layout.tsx - Expo Navigator
+```
+
+**Grund:** Jede Platform hat ein eigenes Routing-System.
+
+### ❌ 5. Platform-APIs
+
+```typescript
+// ❌ FALSCH - Platform APIs gehören nicht in shared!
+export function getScreenSize() {
+  return window.innerHeight; // ❌ window existiert nur im Browser!
+}
+
+// ✅ RICHTIG - Falls nötig: Abstraktion + Implementierungen
+export interface ScreenProvider {
+  getHeight(): number;
+}
+
+// Web: apps/web/lib/screenProvider.ts
+export class WebScreenProvider implements ScreenProvider {
+  getHeight() { return window.innerHeight; }
+}
+
+// Mobile: apps/mobile/lib/screenProvider.ts
+import { Dimensions } from 'react-native';
+export class MobileScreenProvider implements ScreenProvider {
+  getHeight() { return Dimensions.get('window').height; }
+}
+```
+
+---
+
+## 🔄 Feature Development Workflow (SCHRITT FÜR SCHRITT)
+
+### Beispiel: Neue "Activity Detail" Feature
+
+**1️⃣ Types in Shared definieren**
+```typescript
+// packages/shared/src/types.ts
+export interface Activity {
+  id: string;
+  title: string;
+  description: string;
+  category: 'hiking' | 'beach' | 'culture';
+  difficulty: 'easy' | 'medium' | 'hard';
+  duration_minutes: number;
+  rating: number;
+  image_url: string;
+}
+```
+
+**2️⃣ Geschäftslogik in Shared**
+```typescript
+// packages/shared/src/utils/activityUtils.ts
+export function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins}min`;
+  return `${hours}h ${mins}min`;
+}
+```
+
+**3️⃣ DB Queries in Shared**
+```typescript
+// packages/shared/src/queries/activities.ts
+export async function getActivityById(id: string): Promise<Activity | null> {
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('id', id)
+    .single();
+  return (data as Activity) || null;
+}
+```
+
+**4️⃣ i18n Keys in ALLE 3 Dateien!**
+```json
+// packages/shared/src/i18n/de.json
+{
+  "activity.title": "Aktivität",
+  "activity.difficulty": "Schwierigkeit",
+  "activity.duration": "Dauer"
+}
+
+// packages/shared/src/i18n/en.json
+{
+  "activity.title": "Activity",
+  "activity.difficulty": "Difficulty",
+  "activity.duration": "Duration"
+}
+
+// packages/shared/src/i18n/es.json
+{
+  "activity.title": "Actividad",
+  "activity.difficulty": "Dificultad",
+  "activity.duration": "Duración"
+}
+```
+
+**5️⃣ Web Component (HTML/React/Tailwind)**
+```typescript
+// apps/web/src/components/ActivityDetail.tsx
+import { Activity, formatDuration } from '@repo/shared';
+import { useTranslations } from 'next-intl';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
+export function ActivityDetail({ activity }: { activity: Activity }) {
+  const t = useTranslations();
+  
+  return (
+    <Card className="p-6">
+      <img src={activity.image_url} alt={activity.title} className="w-full h-64 object-cover rounded-lg mb-4" />
+      <h1 className="text-3xl font-bold mb-2">{activity.title}</h1>
+      <p className="text-gray-600 mb-4">{activity.description}</p>
+      <div className="flex gap-2 mb-4">
+        <Badge>{t('activity.difficulty')}: {activity.difficulty}</Badge>
+        <Badge>{t('activity.duration')}: {formatDuration(activity.duration_minutes)}</Badge>
+      </div>
+    </Card>
+  );
+}
+```
+
+**6️⃣ Web Page**
+```typescript
+// apps/web/src/app/[lang]/activities/[id]/page.tsx
+import { getActivityById } from '@repo/shared';
+import { ActivityDetail } from '@/components/ActivityDetail';
+
+export default async function ActivityPage({ params }: { params: { id: string } }) {
+  const activity = await getActivityById(params.id);
+  if (!activity) return <div>Not found</div>;
+  return <ActivityDetail activity={activity} />;
+}
+```
+
+**7️⃣ Mobile Component (React Native)**
+```typescript
+// apps/mobile/components/ActivityDetail.tsx
+import { Activity, formatDuration } from '@repo/shared';
+import { useTranslations } from 'next-intl';
+import { View, Text, Image, ScrollView } from 'react-native';
+import { Badge } from '@/components/ui/badge';
+
+export function ActivityDetail({ activity }: { activity: Activity }) {
+  const t = useTranslations();
+  
+  return (
+    <ScrollView className="flex-1 bg-white">
+      <Image source={{uri: activity.image_url}} className="w-full h-64" />
+      <View className="p-4">
+        <Text className="text-2xl font-bold mb-2">{activity.title}</Text>
+        <Text className="text-gray-600 mb-4">{activity.description}</Text>
+        <View className="flex-row gap-2 mb-4">
+          <Badge>{t('activity.difficulty')}: {activity.difficulty}</Badge>
+          <Badge>{t('activity.duration')}: {formatDuration(activity.duration_minutes)}</Badge>
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+```
+
+**8️⃣ Mobile Screen**
+```typescript
+// apps/mobile/app/activity/[id].tsx
+import { useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { getActivityById } from '@repo/shared';
+import { ActivityDetail } from '@/components/ActivityDetail';
+
+export default function ActivityScreen() {
+  const { id } = useLocalSearchParams();
+  const [activity, setActivity] = useState(null);
+
+  useEffect(() => {
+    if (id) getActivityById(id as string).then(setActivity);
+  }, [id]);
+
+  return activity ? <ActivityDetail activity={activity} /> : null;
+}
+```
+
+**9️⃣ Test!**
+```bash
+bun run type-check  # ✅ Keine TS Fehler?
+bun run build       # ✅ Beide Apps bauen?
+```
+
+✅ **Fertig!** Die neue Feature funktioniert auf Web & Mobile!
+
+---
+
+## 📊 Entscheidungsbaum (Wo gehört Code hin?)
+
+```
+START
+  ↓
+├─ "Ist es UI/Komponenten/Styling?"
+│  ├─ JA → app-spezifisch (apps/web ODER apps/mobile)
+│  └─ NEIN ↓
+│
+├─ "Ist es eine Page oder Screen?"
+│  ├─ JA → app-spezifisch
+│  └─ NEIN ↓
+│
+├─ "Ist es Routing/Navigation?"
+│  ├─ JA → app-spezifisch
+│  └─ NEIN ↓
+│
+├─ "Nutzt es window, document, oder Mobile-APIs?"
+│  ├─ JA → app-spezifisch (oder abstrahieren)
+│  └─ NEIN ↓
+│
+├─ "Brauchen es BEIDE Apps?"
+│  ├─ JA → @repo/shared ✅
+│  └─ NEIN → app-spezifisch
+│
+└─ ERGEBNIS: @repo/shared! ✅
+```
+
+---
+
+# 🚀 SEKTION 4: COMMANDS & WORKFLOW
+
+## 🎯 Wichtige Commands (Turborepo)
+
 ```bash
 bun install              # Dependencies installieren
 bun run dev              # Alle Apps parallel starten (watch mode)
@@ -174,699 +676,571 @@ bun run dev              # Expo Dev Server
 bun run build            # EAS Build
 ```
 
-### Packages
+---
+
+## 📋 Feature Development Checkliste
+
+✅ **Vor dem Coden:**
+- [ ] MONOREPO_GUIDE.md oder ARCHITECTURE.md gelesen?
+- [ ] Wo gehört dieser Code hin?
+- [ ] Braucht BEIDE Apps das?
+
+✅ **Während der Entwicklung:**
+- [ ] **Types** in `@repo/shared/src/types.ts`
+- [ ] **Logik** in `@repo/shared/src/utils/`
+- [ ] **DB Queries** in `@repo/shared/src/queries/`
+- [ ] **i18n Keys** in **ALLE 3 JSON-Dateien!** (de, en, es)
+- [ ] **Web Component** in `apps/web/src/components/`
+- [ ] **Mobile Component** in `apps/mobile/components/`
+- [ ] **Web Page** in `apps/web/src/app/[lang]/...`
+- [ ] **Mobile Screen** in `apps/mobile/app/...`
+
+✅ **Vor dem Commit:**
+- [ ] `bun run type-check` erfolgreich
+- [ ] `bun run lint` erfolgreich
+- [ ] `bun run build` erfolgreich (BEIDE Apps!)
+- [ ] Keine `any` Types
+- [ ] Keine UI Code in `@repo/shared`
+- [ ] Alle Sprachen (DE/EN/ES) vorhanden
+
+✅ **Vor dem Push:**
+- [ ] Git Commits sauber & aussagekräftig
+- [ ] Code ist getestet
+- [ ] Keine Secrets in Git!
+
+---
+
+## 📝 Git Workflow
+
 ```bash
-cd packages/shared
-bun run build            # Build shared package
-```
-
----
-
-## 📋 Internationalisierung (i18n)
-
-### Sprachen
-- **DE** (Deutsch) - `de.json`
-- **EN** (English) - `en.json`  
-- **ES** (Español) - `es.json`
-
-### Routing
-Die App nutzt **Dynamic Segment** `[lang]`:
-```
-/de → Deutsch
-/en → English
-/es → Español
-```
-
-### Komponenten-Verwendung
-```typescript
-import { useTranslations } from 'next-intl';
-
-export default function MyComponent() {
-  const t = useTranslations();
-  return <h1>{t('home.title')}</h1>;
-}
-```
-
-### Neue Übersetzungen hinzufügen
-1. Edit `packages/shared/src/i18n/de.json` (und en.json, es.json)
-2. Format: `{ "section.key": "Wert" }`
-3. Commit + Deploy
-
----
-
-## 🎨 Styling Guidelines
-
-### Tailwind Klassen
-- **Responsive:** `md:`, `lg:`, `xl:` Prefixes
-- **Dark Mode:** Bereits konfiguriert mit `darkMode: ['class']`
-- **Custom Colors:** Definiert in `tailwind.config.ts`
-
-### shadcn/ui Components
-- Importieren von `@/components/ui/`
-- Beispiel: `Button`, `Input`, `Card`, `Dialog`
-- Vollständig typsicher mit TypeScript
-
-### CSS Modules vs Tailwind
-- **Bevorzugt:** Tailwind CSS Classes
-- **Fallback:** CSS Modules wenn nötig (`.module.css`)
-- **Global Styles:** `src/globals.css`
-
----
-
-## 🔐 Authentifizierung & Datenbank
-
-### Supabase Client
-```typescript
-import { supabase } from '@repo/supabase';
-
-// Beispiel
-const { data, error } = await supabase
-  .from('table_name')
-  .select('*')
-  .eq('id', 1);
-```
-
-### Environment Variables
-**apps/web/.env.local:**
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://ayetwgaainiskwqvgubd.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key_here
-```
-
-**apps/mobile/.env.local:**
-```env
-EXPO_PUBLIC_SUPABASE_URL=https://ayetwgaainiskwqvgubd.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your_key_here
-```
-
----
-
-## 📦 Shared Packages
-
-### @repo/shared
-- **i18n:** Übersetzungsdateien
-- **utils/date.ts:** Datum-Helpers
-- **utils/string.ts:** String-Utilities
-
-Import: `import { someUtil } from '@repo/shared';`
-
-### @repo/supabase
-- **client.ts:** Initialisierter Supabase Client
-- **types.ts:** Auto-Generated Types von DB
-
-Import: `import { supabase } from '@repo/supabase';`
-
-### @repo/typescript-config
-- **base.json:** Basis TS Config
-- **nextjs.json:** Für Web App
-- **react-native.json:** Für Mobile App
-
----
-
-## 🔀 Shared vs App-Spezifisch: Kritische Regel
-
-### ✅ WAS MUSS IN `@repo/shared` (BEIDE APPS)
-
-**1. Geschäftslogik & Datenverarbeitung:**
-- Berechnung von Preisen, Distanzen, Datum-Operationen
-- String-Validierung, Parsing, Formatting
-- API-Logik (Request/Response Transformation)
-- State Management Logik
-
-**2. Types & Interfaces:**
-```typescript
-// packages/shared/src/types.ts
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar_url?: string;
-}
-
-export interface Activity {
-  id: string;
-  title: string;
-  category: 'hiking' | 'beach' | 'culture';
-  location: { lat: number; lng: number };
-}
-
-export interface ApiResponse<T> {
-  data: T;
-  error?: string;
-  timestamp: string;
-}
-```
-
-**3. Utility Functions:**
-```typescript
-// packages/shared/src/utils/activityUtils.ts
-import { supabase } from '@repo/supabase';
-import { Activity } from '../types';
-
-export function formatActivityTitle(activity: Activity): string {
-  return activity.title.trim().toUpperCase();
-}
-
-export async function fetchActivityById(id: string) {
-  const { data, error } = await supabase
-    .from('activities')
-    .select('*')
-    .eq('id', id)
-    .single();
-  return { data, error };
-}
-
-export function calculateDistance(
-  lat1: number, 
-  lng1: number, 
-  lat2: number, 
-  lng2: number
-): number {
-  // Haversine Formula
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-}
-```
-
-**4. Internationalisierung (i18n):**
-- Alle Translation-Keys in `packages/shared/src/i18n/*.json`
-- Gleiche Keys in allen 3 Sprachen (DE, EN, ES)
-
-**5. Constants & Enums:**
-```typescript
-// packages/shared/src/constants.ts
-export const ACTIVITY_CATEGORIES = ['hiking', 'beach', 'culture'] as const;
-export const SUPPORTED_LOCALES = ['de', 'en', 'es'] as const;
-export const MAX_DESCRIPTION_LENGTH = 500;
-```
-
----
-
-### ❌ WAS GEHÖRT NICHT IN SHARED (APP-SPEZIFISCH)
-
-**1. UI-Komponenten:**
-- Web braucht: React Components mit HTML/CSS (shadcn/ui)
-- Mobile braucht: React Native Views (NativeWind)
-- ❌ NIEMALS UI in `@repo/shared`!
-
-**2. Page/Screen-Level Code:**
-- Page.tsx, Layout.tsx (Web)
-- App._layout.tsx, Screens (Mobile)
-- Diese sind platform-spezifisch
-
-**3. Styling & CSS:**
-- Tailwind Klassen (Web)
-- NativeWind Klassen (Mobile)
-- CSS Modules
-- ❌ NIEMALS CSS/Styling in `@repo/shared`!
-
-**4. Navigation/Routing:**
-- Web: Next.js File-based Routing
-- Mobile: Expo Router Stack Navigator
-- ❌ Platform-spezifisch halten!
-
-**5. Platform-APIs:**
-- `window`, `document` (Web only)
-- `Dimensions`, `Geolocation` (Mobile only)
-- Niemals direkt nutzen in shared!
-
----
-
-## 🏗️ Praktisches Beispiel: Activity Feature (Web + Mobile)
-
-### Schritt 1: Types & Logik in Shared ✅
-
-```typescript
-// packages/shared/src/types.ts
-export interface Activity {
-  id: string;
-  title: string;
-  description: string;
-  category: 'hiking' | 'beach' | 'culture';
-  location: { lat: number; lng: number };
-  difficulty: 'easy' | 'medium' | 'hard';
-  duration_minutes: number;
-  rating: number;
-  image_url: string;
-}
-```
-
-```typescript
-// packages/shared/src/utils/activityUtils.ts
-import { supabase } from '@repo/supabase';
-import { Activity } from '../types';
-
-export async function getActivityById(id: string): Promise<Activity | null> {
-  const { data, error } = await supabase
-    .from('activities')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error) {
-    console.error('Error fetching activity:', error);
-    return null;
-  }
-
-  return data as Activity;
-}
-
-export async function getActivitiesByCategory(
-  category: string
-): Promise<Activity[]> {
-  const { data, error } = await supabase
-    .from('activities')
-    .select('*')
-    .eq('category', category)
-    .order('rating', { ascending: false });
-
-  return (data as Activity[]) || [];
-}
-
-export function getDifficultyBadgeColor(difficulty: string): string {
-  switch (difficulty) {
-    case 'easy':
-      return 'bg-green-100 text-green-800';
-    case 'medium':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'hard':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-}
-
-export function formatDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours === 0) return `${mins}min`;
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h ${mins}min`;
-}
-```
-
-```json
-// packages/shared/src/i18n/de.json
-{
-  "activity.title": "Aktivität",
-  "activity.difficulty": "Schwierigkeit",
-  "activity.duration": "Dauer",
-  "activity.rating": "Bewertung",
-  "activity.category.hiking": "Wanderung",
-  "activity.category.beach": "Strand",
-  "activity.category.culture": "Kultur"
-}
-```
-
-### Schritt 2: Web Component (App-spezifisch) ✅
-
-```typescript
-// apps/web/src/components/ActivityCard.tsx
-import { Activity } from '@repo/shared';
-import { 
-  getDifficultyBadgeColor, 
-  formatDuration 
-} from '@repo/shared';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Star } from 'lucide-react';
-import Image from 'next/image';
-
-interface ActivityCardProps {
-  activity: Activity;
-  onClick?: () => void;
-}
-
-export function ActivityCard({ activity, onClick }: ActivityCardProps) {
-  return (
-    <Card 
-      className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-      onClick={onClick}
-    >
-      <div className="relative h-48 w-full">
-        <Image
-          src={activity.image_url}
-          alt={activity.title}
-          fill
-          className="object-cover"
-        />
-      </div>
-      
-      <div className="p-4">
-        <h3 className="font-bold text-lg mb-2">{activity.title}</h3>
-        
-        <div className="flex gap-2 mb-3">
-          <Badge className={getDifficultyBadgeColor(activity.difficulty)}>
-            {activity.difficulty}
-          </Badge>
-          <Badge variant="outline">{formatDuration(activity.duration_minutes)}</Badge>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Star className="w-4 h-4 fill-yellow-400" />
-          <span className="font-semibold">{activity.rating}</span>
-        </div>
-      </div>
-    </Card>
-  );
-}
-```
-
-```typescript
-// apps/web/src/app/[lang]/activities/page.tsx
-import { getActivitiesByCategory } from '@repo/shared';
-import { ActivityCard } from '@/components/ActivityCard';
-
-export default async function ActivitiesPage() {
-  const activities = await getActivitiesByCategory('hiking');
-
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Hiking Activities</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activities.map((activity) => (
-          <ActivityCard key={activity.id} activity={activity} />
-        ))}
-      </div>
-    </div>
-  );
-}
-```
-
-### Schritt 3: Mobile Screen (App-spezifisch) ✅
-
-```typescript
-// apps/mobile/app/activities.tsx
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Image } from 'react-native';
-import { 
-  Activity,
-  getActivitiesByCategory, 
-  formatDuration 
-} from '@repo/shared';
-import { ActivityListItem } from '@/components/ActivityListItem';
-
-export default function ActivitiesScreen() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadActivities();
-  }, []);
-
-  async function loadActivities() {
-    const data = await getActivitiesByCategory('hiking');
-    setActivities(data);
-    setLoading(false);
-  }
-
-  if (loading) {
-    return <View className="flex-1 justify-center items-center"><Text>Loading...</Text></View>;
-  }
-
-  return (
-    <ScrollView className="flex-1 bg-white p-4">
-      <Text className="text-3xl font-bold mb-4">Hiking Activities</Text>
-      
-      {activities.map((activity) => (
-        <ActivityListItem key={activity.id} activity={activity} />
-      ))}
-    </ScrollView>
-  );
-}
-```
-
-```typescript
-// apps/mobile/components/ActivityListItem.tsx
-import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { Activity, formatDuration } from '@repo/shared';
-import { useRouter } from 'expo-router';
-import { Star } from 'lucide-react-native';
-
-interface ActivityListItemProps {
-  activity: Activity;
-}
-
-export function ActivityListItem({ activity }: ActivityListItemProps) {
-  const router = useRouter();
-
-  return (
-    <TouchableOpacity
-      className="bg-gray-100 rounded-lg p-3 mb-3"
-      onPress={() => router.push(`/activity/${activity.id}`)}
-    >
-      <Image
-        source={{ uri: activity.image_url }}
-        className="w-full h-32 rounded-lg mb-2"
-      />
-      
-      <Text className="text-lg font-bold">{activity.title}</Text>
-      
-      <View className="flex-row gap-2 mt-2">
-        <Text className="px-2 py-1 bg-gray-200 rounded text-sm">
-          {activity.difficulty}
-        </Text>
-        <Text className="px-2 py-1 bg-gray-200 rounded text-sm">
-          {formatDuration(activity.duration_minutes)}
-        </Text>
-      </View>
-
-      <View className="flex-row items-center gap-1 mt-2">
-        <Star className="w-4 h-4" />
-        <Text className="font-semibold">{activity.rating}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
-```
-
----
-
-## 📋 Checkliste für Feature Development
-
-Wenn du ein neues Feature bauen möchtest:
-
-- [ ] **Types/Interfaces** → `packages/shared/src/types.ts`
-- [ ] **Geschäftslogik** → `packages/shared/src/utils/`
-- [ ] **Supabase Queries** → `packages/shared/src/utils/`
-- [ ] **i18n Keys** → `packages/shared/src/i18n/*.json` (alle 3 Sprachen!)
-- [ ] **Web UI Component** → `apps/web/src/components/`
-- [ ] **Mobile Native Component** → `apps/mobile/components/`
-- [ ] **Web Page/Screen** → `apps/web/src/app/[lang]/...`
-- [ ] **Mobile Screen** → `apps/mobile/app/...`
-- [ ] **Test both apps:** `bun run type-check && bun run build`
-
----
-
-## 🚀 Staging Deployment
-
-### Passwortschutz
-- **URL:** `https://staging.mallorca-map.com`
-- **Username:** `staging`
-- **Password:** `9963`
-- **Setup:** Siehe `deploy/STAGING_AUTH.md`
-
-### 3-Layer Security
-1. **HTTP Basic Auth** (Nginx) - Blockiert 100% ohne Passwort
-2. **HTTP Headers** (X-Robots-Tag, Cache-Control)
-3. **robots.txt** - Blockiert Bots und Crawler
-
-### Deploy zur Staging
-```bash
-# 1. Code changes committen
+# Feature Branch erstellen
+git checkout -b feature/my-feature
+
+# Entwickeln, committen (Conventional Commits!)
+git commit -m "feat(web): add activity detail page"
+git commit -m "fix(shared): correct distance calculation"
+
+# Tests & Checks
+bun run type-check
+bun run lint
+bun run build
+
+# Committen (ABER NICHT PUSHEN!)
 git add .
-git commit -m "message"
-git push origin main
+git commit -m "feature description"
 
-# 2. SSH zum Server
-ssh user@staging.mallorca-map.com
-
-# 3. Pull + Deploy
-cd /home/app/mallorca-map-next
-git pull origin main
-bun install && bun run build
-sudo systemctl restart mallorca-map-staging
-
-# 4. Nginx testen
-sudo nginx -t && sudo systemctl reload nginx
+# ⚠️ STOPP: NUR du pushst!
+# Nachricht an Matthias: "Feature fertig, Code getestet, bereit zum Push!"
+# Matthias: "Looks good, pushing..."
+# → GitHub Actions deployt automatisch!
 ```
 
 ---
 
-## ✅ Code Konventionen
+# 🔐 SEKTION 5: DEPLOYMENT & SICHERHEIT
 
-### TypeScript
-- **Strict Mode:** Aktiviert in `tsconfig.json`
-- **Typ-Annotationen:** Immer für Props und Returns
-- **Imports:** Alias `@/` verwenden statt `../../../`
+## 🚀 Deployment Flow (KRITISCH!)
 
-### Component Structure
+```
+📌 SCHRITT 1️⃣: Claude arbeitet
+├─ Code entwickeln
+├─ Lokal testen: bun run build ✅
+├─ Lokal testen: bun run type-check ✅
+├─ git add . && git commit -m "..."
+└─ "Code ist fertig & getestet! Bereit zum Push!"
+
+📌 SCHRITT 2️⃣: Matthias reviewt (optional)
+├─ Schaut Code an
+└─ "Looks good!" oder "Change X please"
+
+📌 SCHRITT 3️⃣: Matthias pusht (NUR ER!)
+├─ git push origin main
+└─ GitHub Actions triggert automatisch
+
+📌 SCHRITT 4️⃣: GitHub Actions (automatisch!)
+├─ Checkout Code
+├─ SSH Setup
+├─ Deploy zu Server:
+│  ├─ cd /app/mallorca-map-next
+│  ├─ git pull origin main
+│  ├─ bun install
+│  ├─ bun run build
+│  ├─ sudo systemctl restart mallorca-map-staging
+│  └─ sudo systemctl reload nginx
+└─ Health Check
+
+✅ Live auf https://staging.mallorca-map.com
+```
+
+### ⚠️ NIEMALS machen:
+- ❌ `git push` selbst (nur Matthias!)
+- ❌ SSH zum Deployen nutzen (GitHub Actions macht das!)
+- ❌ `.env.local` committen (in .gitignore!)
+- ❌ Secrets im Code hardcoden
+
+---
+
+## 🔐 Environment Variables
+
+### Lokal (Development)
+```env
+# apps/web/.env.local (in .gitignore)
+NEXT_PUBLIC_SUPABASE_URL=https://...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+### Server (Staging/Production)
+- `.env.local` ist **PERMANENT auf dem Server** unter: `/app/mallorca-map-next/apps/web/.env.local`
+- Wird bei Deploy NICHT überschrieben
+- Änderungen nur via SSH (Notfall)
+
+---
+
+## 📍 Staging Environment
+
+**URL:** https://staging.mallorca-map.com  
+**Auth:** `staging / 9963` (HTTP Basic Auth)  
+**Sicherheit:** 3-Layer Protection:
+1. HTTP Basic Auth (Nginx)
+2. X-Robots-Tag Header
+3. robots.txt für Crawler
+
+---
+
+# 🎨 SEKTION 6: CODE STYLE & KONVENTIONEN
+
+## TypeScript (STRICT MODE!)
+
 ```typescript
-// Imports
+// ✅ GUT - Full typed
+interface UserProps {
+  name: string;
+  age: number;
+  email?: string;
+}
+
+export function UserCard({ name, age, email }: UserProps): JSX.Element {
+  return <div>{name}</div>;
+}
+
+// ❌ FALSCH - Any types
+function getData(data: any) {  // ❌ No!
+  return data.name;             // ❌ No!
+}
+
+// ❌ FALSCH - Implizite returns
+export function BadFunction() {
+  const x = getData();          // ❌ Kein Return type!
+}
+```
+
+## Component Structure
+
+```typescript
+// Imports (gruppiert)
 import { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { UserAvatar } from '@/components/UserAvatar';
 
 // Types
-interface MyComponentProps {
-  title: string;
+interface UserHeaderProps {
+  userName: string;
+  avatarUrl?: string;
   children?: ReactNode;
 }
 
 // Component
-export function MyComponent({ title, children }: MyComponentProps) {
+export function UserHeader({ userName, avatarUrl, children }: UserHeaderProps) {
+  const t = useTranslations();
+  
   return (
-    <div>
-      <Button>{title}</Button>
-      {children}
-    </div>
+    <header className="flex items-center gap-4 p-4">
+      {avatarUrl && <UserAvatar src={avatarUrl} alt={userName} />}
+      <div>
+        <h1 className="text-lg font-bold">{userName}</h1>
+        {children}
+      </div>
+    </header>
   );
 }
 ```
 
-### File Naming
-- **Components:** PascalCase (`Button.tsx`, `Card.tsx`)
-- **Utilities:** camelCase (`dateUtils.ts`, `stringHelpers.ts`)
-- **Types:** PascalCase (`User.ts`, `Product.ts`)
+## File Naming
 
-### Folder Organization
-- Components grouped by feature/area
-- Related utils in same folder
-- Tests co-located with source files
+| Type | Convention | Example |
+|------|-----------|---------|
+| Components | PascalCase | `Button.tsx`, `UserCard.tsx` |
+| Utils | camelCase | `dateUtils.ts`, `stringHelpers.ts` |
+| Types | PascalCase | `User.ts`, `Activity.ts` |
+| Constants | UPPER_SNAKE_CASE | `CATEGORIES.ts`, `CONFIG.ts` |
+| Pages | kebab-case (auto) | `[id]/page.tsx` |
 
----
+## Folder Organization
 
-## 🐛 Häufige Probleme & Lösungen
+```
+apps/web/src/
+├── app/                    # Next.js App Router (Pages)
+├── components/
+│   ├── ui/                # shadcn/ui + Base Components
+│   ├── layout/            # Layout Components
+│   └── features/          # Feature-spezifische Komponenten
+├── lib/
+│   └── utils.ts           # App-spezifische Utilities
+├── i18n.ts                # i18n Konfiguration
+└── globals.css            # Global Tailwind Styles
 
-### Turborepo Build Fehler
-```bash
-# Clear cache
-bun run clean
+apps/mobile/
+├── app/                    # Expo Router (Screens)
+├── components/
+│   ├── ui/                # Base Components
+│   └── features/          # Feature-spezifische Komponenten
+└── tailwind.config.js     # NativeWind Konfiguration
 
-# Rebuild
-bun run build
+packages/shared/src/
+├── types.ts               # All Types & Interfaces
+├── utils/
+│   ├── format.ts          # Formatting Functions
+│   ├── validate.ts        # Validation
+│   ├── math.ts            # Math Utilities
+│   └── date.ts            # Date Utilities
+├── queries/               # Supabase Queries
+│   ├── activities.ts
+│   ├── events.ts
+│   └── users.ts
+├── i18n/
+│   ├── de.json
+│   ├── en.json
+│   └── es.json
+└── constants.ts           # Constants & Enums
 ```
 
-### Type Errors nach Änderungen
-```bash
-bun run type-check
+---
+
+# 🐛 SEKTION 7: HÄUFIGE FEHLER & LÖSUNGEN
+
+## ❌ Fehler 1: UI Code in @repo/shared
+
+```typescript
+// ❌ FALSCH
+// packages/shared/src/components/Button.tsx
+export function Button() { 
+  return <button>...</button>; // ❌ Web-spezifisch!
+}
+
+// ✅ RICHTIG
+// apps/web/src/components/Button.tsx
+// apps/mobile/components/Button.tsx (separate!)
 ```
 
-### Module not found
-- Check imports are using `@/` alias
-- Ensure package.json has correct workspace reference
-- Run `bun install` in root
-
-### Styling nicht angewendet
-- Tailwind content paths in `tailwind.config.ts`
-- Check CSS ist in `globals.css` importiert
-- Clear `.next` folder: `rm -rf apps/web/.next`
+**Lösung:** Separate Components pro App!
 
 ---
 
-## 🎯 Cursor AI Richtlinien
+## ❌ Fehler 2: Platform APIs ohne Abstraktion
 
-### Wenn du Code debuggen sollst:
-1. **Lese zuerst** die relevante Datei komplett
-2. **Verstehe** die Komponenten-Hierarchie
-3. **Check** den Datenfluss (Props → State → Output)
-4. **Teste** deine Lösung mit den Commands oben
+```typescript
+// ❌ FALSCH
+// packages/shared/src/utils/screen.ts
+export function getHeight() { 
+  return window.innerHeight; // ❌ window existiert nur im Browser!
+}
 
-### Wenn du neue Features bauen sollst:
-1. **Ask:** Sollte es in `apps/web` oder `apps/mobile`?
-2. **Check:** Kann Code in `packages/shared` wiederverwendet werden?
-3. **TypeScript:** Immer Typen definieren
-4. **Test:** Mit `bun run type-check && bun run lint`
+// ✅ RICHTIG - Abstraktion
+export interface ScreenProvider {
+  getHeight(): number;
+}
 
-### Wenn du Komponenten erstellst:
-1. **Use:** shadcn/ui Components als Base
-2. **Style:** Mit Tailwind CSS
-3. **Accept Props:** Immer typisiert
-4. **Export:** Named Export, nicht default
+// Web: apps/web/lib/screenProvider.ts
+export class WebScreenProvider implements ScreenProvider {
+  getHeight() { return window.innerHeight; }
+}
 
-### Wenn du i18n Strings editierst:
-1. **Update:** Alle 3 JSON-Dateien (de/en/es)
-2. **Format:** Immer `"section.key": "value"`
+// Mobile: apps/mobile/lib/screenProvider.ts
+export class MobileScreenProvider implements ScreenProvider {
+  getHeight() { return Dimensions.get('window').height; }
+}
+```
+
+**Lösung:** Abstraktion + App-spezifische Implementierungen!
 
 ---
 
-## 🔴 CODE REVIEW & APPROVAL (⭐ KRITISCH!)
+## ❌ Fehler 3: Incomplette i18n
 
-**Nur EINE Regel: git push braucht deine Bestätigung!**
+```typescript
+// ❌ FALSCH - Nur in de.json!
+{
+  "activity.title": "Aktivität"
+  // ❌ Nicht in en.json und es.json!
+}
 
-### ✅ Claude darf selbst machen:
-- Alle Code-Änderungen (intelligent & gut)
-- Neue Komponenten erstellen
-- Features implementieren
-- Lokal testen (`bun run build`, `type-check`, `lint`)
-- `git add .` und `git commit` machen
+// ✅ RICHTIG - ALLE 3 Dateien!
+// de.json
+{ "activity.title": "Aktivität" }
+// en.json
+{ "activity.title": "Activity" }
+// es.json
+{ "activity.title": "Actividad" }
+```
+
+**Lösung:** IMMER in **ALLE 3 JSON-Dateien** hinzufügen!
+
+---
+
+## ❌ Fehler 4: Any Types verwenden
+
+```typescript
+// ❌ FALSCH - any Type
+function processData(data: any) {
+  return data.something;
+}
+
+// ✅ RICHTIG - Proper Types
+interface DataType {
+  something: string;
+}
+
+function processData(data: DataType): string {
+  return data.something;
+}
+```
+
+**Lösung:** Immer TypeScript Strict Mode nutzen!
+
+---
+
+## ❌ Fehler 5: Tailwind/NativeWind gemischt
+
+```typescript
+// ❌ FALSCH - Tailwind in shared (Web only!)
+// packages/shared/src/components/Card.tsx
+export function Card() {
+  return <div className="p-4 rounded-lg">...</div>;
+}
+
+// ✅ RICHTIG - Separate Komponenten
+// apps/web/src/components/Card.tsx
+export function Card() {
+  return <div className="bg-white p-4 rounded-lg shadow-md">...</div>;
+}
+
+// apps/mobile/components/Card.tsx
+export function Card() {
+  return <View className="bg-white p-4 rounded-lg">...</View>;
+}
+```
+
+**Lösung:** UI-Komponenten müssen pro Platform sein!
+
+---
+
+## ❌ Fehler 6: Inline Styles statt Tailwind
+
+```typescript
+// ❌ FALSCH - Inline Styles
+<div style={{ padding: '16px', borderRadius: '8px' }}>...</div>
+
+// ✅ RICHTIG - Tailwind Classes
+<div className="p-4 rounded-lg">...</div>
+```
+
+**Lösung:** IMMER Tailwind/NativeWind nutzen, keine Inline Styles!
+
+---
+
+## ❌ Fehler 7: console.log in Production
+
+```typescript
+// ❌ FALSCH
+console.log('Debug:', data); // Bleibt sichtbar!
+
+// ✅ RICHTIG - Proper Logging (z.B. Sentry)
+import { captureException } from '@sentry/react';
+captureException(new Error('Debug info'), {extra: {data}});
+```
+
+**Lösung:** Proper Logging-Systeme nutzen!
+
+---
+
+## ❌ Fehler 8: Hardcoded Strings
+
+```typescript
+// ❌ FALSCH - Hardcoded
+return <h1>Aktivitäten</h1>;  // ❌ Nur in Deutsch!
+
+// ✅ RICHTIG - i18n
+const t = useTranslations();
+return <h1>{t('activities.title')}</h1>;  // ✅ Alle Sprachen!
+```
+
+**Lösung:** IMMER i18n nutzen!
+
+---
+
+## ❌ Fehler 9: Magic Numbers
+
+```typescript
+// ❌ FALSCH
+if (age > 18 && price < 99.99) { ... }
+
+// ✅ RICHTIG
+const MIN_ADULT_AGE = 18;
+const MAX_PRICE = 99.99;
+
+if (age > MIN_ADULT_AGE && price < MAX_PRICE) { ... }
+```
+
+**Lösung:** Constants für Magic Numbers!
+
+---
+
+## ❌ Fehler 10: `git push` selbst machen
+
+```bash
+# ❌ NIEMALS!
+git push origin main  # ← Claude darf das NICHT!
+
+# ✅ RICHTIG
+# Claude: "Code ist fertig, commits sind ready!"
+# Matthias: "git push origin main"
+# GitHub Actions: Auto-Deploy! ✅
+```
+
+**Lösung:** NUR der User pusht! GitHub Actions deployt automatisch!
+
+---
+
+# ✅ SEKTION 8: CHECKLISTE VOR JEDEM COMMIT
+
+- [ ] **Shared Package Regeln beachtet?**
+  - [ ] UI Code NICHT in @repo/shared
+  - [ ] Types in types.ts
+  - [ ] Logik in utils/
+  - [ ] Queries in queries/
+  
+- [ ] **i18n vollständig?**
+  - [ ] Keys in de.json
+  - [ ] Keys in en.json
+  - [ ] Keys in es.json
+  - [ ] Format: `{ "section.key": "value" }`
+
+- [ ] **TypeScript sauber?**
+  - [ ] Keine `any` Types
+  - [ ] Alle Props typed
+  - [ ] Alle Returns typed
+  - [ ] `bun run type-check` ✅
+
+- [ ] **Linting OK?**
+  - [ ] `bun run lint` ✅
+  - [ ] Keine Warnings
+
+- [ ] **Build erfolgreich?**
+  - [ ] `bun run build` ✅
+  - [ ] Beide Apps (web + mobile)
+
+- [ ] **Commits sauber?**
+  - [ ] Conventional Commits Format
+  - [ ] Aussagekräftige Nachrichten
+  - [ ] Logische Commits (nicht alles in einen)
+
+- [ ] **Keine Secrets?**
+  - [ ] Keine `.env.local` committed
+  - [ ] Keine Passwords im Code
+  - [ ] Keine API Keys visible
+
+- [ ] **NIEMALS pushen!**
+  - [ ] ⚠️ Nur Claude: git add + git commit
+  - [ ] ⚠️ Nur Matthias: git push origin main
+
+---
+
+# 📚 SEKTION 9: WEITERE RESSOURCEN & LINKS
+
+## 📖 Dokumentationsdateien (Detaillierte Infos)
+
+| Datei | Inhalt | Wenn du... |
+|-------|--------|-----------|
+| **README.md** | Projekt Überblick | Neu anfangen |
+| **QUICKSTART.md** | Schnelleinstieg (5 Min) | Schnell loslegen willst |
+| **MONOREPO_GUIDE.md** | Detaillierte Monorepo Regeln | Wissen willst, wo Code hin gehört |
+| **ARCHITECTURE.md** | Deep Dive aller Technologien | Das System verstehen willst |
+| **DEVELOPMENT_PRINCIPLES.md** | Entwicklungs-Philosophie | Verstehen willst, WARUM wir so bauen |
+| **DEPLOYMENT.md** | Deployment Details | Deployen musst |
+| **supabase/README.md** | Datenbank Schema | Mit der DB arbeiten musst |
+
+**Siehe auch:**
+- `.github/workflows/deploy-staging.yml` - GitHub Actions Config
+- `deploy/STAGING_AUTH.md` - Staging Environment Auth
+- `deploy/SSH_SETUP.md` - SSH für Notfälle
+
+---
+
+# 🎯 SEKTION 10: QUICK REFERENCE (TL;DR)
+
+## Die 5 Goldenen Regeln
+
+1. ✅ **Shared Logik teilen** - Types, Queries, i18n, Logik
+2. ✅ **App-spezifische UI trennen** - Komponenten, Pages, Routing
+3. ✅ **Alle 3 Sprachen!** - DE/EN/ES in i18n
+4. ✅ **TypeScript Strict** - Keine `any` Types
+5. ✅ **NUR Matthias pusht** - Claude committet, User deployt
+
+## Schnelle Checkliste
+
+```bash
+# Vor jedem Commit
+bun run type-check     # ✅ TypeScript OK?
+bun run lint           # ✅ Linting OK?
+bun run build          # ✅ Beide Apps bauen?
+
+# Commit & fertig
+git add .
+git commit -m "feat(web): add feature"
+# "Code fertig & getestet!"
+
+# NUR MATTHIAS:
+git push origin main   # GitHub Actions deployt automatisch!
+```
+
+## Bei Unsicherheit
+
+1. Lese `.cursorrules` (diese Datei!) - **DU BIST HIER** 📖
+2. Lese `MONOREPO_GUIDE.md` - Entscheidungsbaum für Code-Placement
+3. Lese `ARCHITECTURE.md` - Deep Dive wenn Fragen bleiben
+4. Frage nach / Slack / Discuss - Wenn still unklar
+
+---
+
+## 🔴 ABSOLUTES NEVER-EVER (Kritische Do-Nots)
+
+❌ **NIEMALS:**
+- UI Components in @repo/shared
+- Inline Styles (nur Tailwind!)
+- Platform APIs ohne Abstraktion
+- `any` Types
+- Incomplete i18n (nur 1-2 Sprachen)
+- Secrets/Keys im Code
+- git push selbst machen (nur User!)
+- Pfusch-Lösungen für Geschwindigkeit
+- copy-paste Code (DRY Principle!)
+- console.log im Production Code
+
+✅ **IMMER:**
+- Logik in @repo/shared
+- Types für alles
+- UI in apps/web oder apps/mobile
+- Tailwind/NativeWind für Styling
+- i18n für Text (DE/EN/ES!)
+- TypeScript Strict Mode
+- Code Reviews vor Merge
 - Tests schreiben & durchführen
-
-### ❌ Claude darf NICHT:
-- `git push` machen (NUR du!)
-- Deployment triggern
-- SSH zum Deployen nutzen
-
-### 🔄 Workflow:
-
-```
-STEP 1️⃣: Claude arbeitet
-├─ Code ändern (intelligent)
-├─ Testen: bun run build ✅
-├─ Testen: bun run type-check ✅
-├─ Testen: bun run lint ✅
-├─ git add . && git commit
-└─ "Code ist fertig und getestet!"
-
-STEP 2️⃣: Matthias reviewt (optional)
-├─ Schaut Code/Commits an
-└─ "Looks good!" oder "Ändere noch X"
-
-STEP 3️⃣: Claude pusht (ABER NUR mit OK!)
-├─ Wartet auf "Deploy!" oder "git push"
-├─ "Du kannst jetzt git push machen"
-└─ Matthias: git push origin main
-
-STEP 4️⃣: GitHub Actions (automatisch)
-├─ Deployment läuft
-└─ ✅ Live!
-```
-
-### 📋 Checkliste vor "Code ist fertig":
-
-- [ ] Code geschrieben
-- [ ] `bun run build` erfolgreich ✅
-- [ ] `bun run type-check` erfolgreich ✅
-- [ ] `bun run lint` erfolgreich ✅
-- [ ] Git commits sauber
-- [ ] "Code ist fertig & getestet!"
-
-### 📋 Checkliste vor git push:
-
-- [ ] Habe ich "Deploy!" oder "git push OK" gehört?
-- [ ] Erst DANN: "Du kannst jetzt git push machen"
-- [ ] NICHT selbst pushen! (NUR User!)
+- Dokumentation updaten
+- Langfristig denken
 
 ---
 
-## 🔴 DEPLOYMENT RULE (⭐ ABSOLUTE RULE!)
-
-**Nur User (Matthias) darf git push machen!**
-Das Deployment geht SOFORT LIVE nach Push!
-
----
-
-## 📚 Deployment Dokumentation
-
-- **`DEPLOYMENT.md`** - Vollständige Deployment-Anleitung
-- **`.github/workflows/deploy-staging.yml`** - GitHub Actions Config
-- **`deploy/SSH_SETUP.md`** - SSH für Notfälle
-- **`README.md`** - Quick Deploy Flow
+**Letzte Aktualisierung:** 18. Oktober 2025  
+**Status:** ✅ AKTUELL & BINDEND für alle Contributors  
+**Gültig für:** Alle Befehlsausführungen der KI auf diesem Projekt
