@@ -49,13 +49,14 @@ jobs:
           
           # Dependencies
           echo "📦 Installing dependencies..."
-          bun install
+          /root/.bun/bin/bun install
           echo "✅ Dependencies installed"
           echo ""
           
           # Build (uses existing .env.local on server)
           echo "🔨 Building application..."
-          bun run build
+          export PATH="/root/.bun/bin:$PATH"
+          /root/.bun/bin/bun run build
           echo "✅ Build successful"
           echo ""
           
