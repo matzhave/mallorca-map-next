@@ -4,13 +4,26 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'standalone',
-    reactStrictMode: true,
+    transpilePackages: ['@repo/shared', '@repo/supabase'],
     images: {
-        domains: ['ayetwgaainiskwqvgubd.supabase.co'],
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: '**.supabase.co',
+            },
+            {
+                protocol: 'https',
+                hostname: 'maps.googleapis.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'lh3.googleusercontent.com',
+            },
+        ],
     },
-    typedRoutes: true,
+    experimental: {
+        optimizePackageImports: ['@repo/shared', 'lucide-react'],
+    },
 };
 
 export default withNextIntl(nextConfig);
-

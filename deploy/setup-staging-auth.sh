@@ -11,7 +11,7 @@
 set -e
 
 HTPASSWD_FILE="/etc/nginx/.htpasswd_staging"
-USERNAME="staging"
+USERNAME="admin"
 
 echo "╔════════════════════════════════════════════════════════════╗"
 echo "║     Setup Passwortschutz für Staging (Nginx Auth)         ║"

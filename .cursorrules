@@ -1,5 +1,43 @@
 # Cursor AI Rules für Mallorca Map Monorepo
 
+## 🔴 KRITISCH: Entwicklungs-Prinzipien (ABSOLUT BINDEND!)
+
+> **Diese Regeln haben HÖCHSTE PRIORITÄT. Sie überschreiben alle anderen Überlegungen.**
+
+### ⚠️ NIEMALS Kompromisse eingehen!
+
+❌ **VERBOTEN:**
+- Pfusch-Lösungen, Workarounds, Quick Fixes
+- Abkürzungen die später Probleme verursachen
+- "Funktioniert erstmal" ohne langfristig zu denken
+- Technische Schulden für Geschwindigkeit
+
+✅ **PFLICHT:**
+- **Immer** die professionelle, skalierbare Lösung wählen
+- **Immer** State-of-the-Art Best Practices folgen
+- **Immer** Probleme an der Root Cause lösen, nicht umgehen
+- **Immer** langfristig denken (10+ Jahre Projekt-Lebensdauer)
+
+### 📖 Beispiel aus diesem Projekt:
+
+**Problem:** PostGIS Extension `geography` Type nicht gefunden
+
+❌ **FALSCH:** Einfach `latitude`/`longitude` Spalten nutzen (funktioniert, aber nicht optimal für Geo-Queries)
+
+✅ **RICHTIG:** PostGIS korrekt konfigurieren:
+1. Extension im `extensions` Schema aktivieren
+2. `search_path` setzen damit Types gefunden werden
+3. `gen_random_uuid()` statt `uuid_generate_v4()` nutzen (Postgres built-in)
+4. Dokumentieren warum und wie
+
+**Ergebnis:** Optimale Performance für Nearby-Queries, ST_Distance, Spatial Indexes
+
+---
+
+**📚 Vollständige Prinzipien:** Siehe `DEVELOPMENT_PRINCIPLES.md`
+
+---
+
 ## 🎯 Projekt-Kontext
 
 **Name:** Mallorca Map Next  

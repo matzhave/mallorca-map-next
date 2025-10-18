@@ -4,6 +4,16 @@ Vollständige Dokumentation aller Systeme, die in diesem Projekt verwendet werde
 
 ---
 
+## ⚠️ PFLICHTLEKTÜRE
+
+**Bevor du mit diesem Dokument arbeitest, lies bitte:**
+
+📖 [`DEVELOPMENT_PRINCIPLES.md`](./DEVELOPMENT_PRINCIPLES.md) - **Entwicklungs-Prinzipien (BINDEND!)**
+
+**Kern-Prinzip:** Keine Kompromisse, keine Pfusch-Lösungen. Immer professionell, skalierbar, state-of-the-art.
+
+---
+
 ## 📚 Inhaltsverzeichnis
 
 1. [Monorepo Struktur](#monorepo-struktur)

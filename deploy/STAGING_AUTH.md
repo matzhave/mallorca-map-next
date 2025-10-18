@@ -63,7 +63,7 @@ Das Skript fragt dich nach einem Passwort und erstellt die Datei `/etc/nginx/.ht
 
 **Oder manuell:**
 ```bash
-sudo htpasswd -c /etc/nginx/.htpasswd_staging staging
+sudo htpasswd -c /etc/nginx/.htpasswd_staging admin
 ```
 
 ### 3. Nginx neuladen
@@ -94,17 +94,17 @@ Entferne die Staging-Domain aus Google Search Console und Bing Webmaster Tools:
 
 ### Mit Browser
 Öffne `https://staging.mallorca-map.com/de` - der Browser fordert dich um Benutzerdaten auf:
-- **Benutzer:** `staging`
-- **Passwort:** Dein gewähltes Passwort
+- **Benutzer:** `admin`
+- **Passwort:** `9963`
 
 ### Mit curl
 ```bash
-curl -u staging:DEIN_PASSWORT https://staging.mallorca-map.com/de
+curl -u admin:9963 https://staging.mallorca-map.com/de
 ```
 
 ### Mit wget
 ```bash
-wget --user=staging --password=DEIN_PASSWORT https://staging.mallorca-map.com/de
+wget --user=admin --password=9963 https://staging.mallorca-map.com/de
 ```
 
 ## Passwort ändern
@@ -112,7 +112,7 @@ wget --user=staging --password=DEIN_PASSWORT https://staging.mallorca-map.com/de
 Zum Ändern des Passworts:
 
 ```bash
-sudo htpasswd /etc/nginx/.htpasswd_staging staging
+sudo htpasswd /etc/nginx/.htpasswd_staging admin
 ```
 
 und dann Nginx neuladen:
@@ -229,10 +229,10 @@ Zum Überprüfen, dass alles funktioniert:
 curl -I https://staging.mallorca-map.com/de
 
 # Test 2: Mit Authentifizierung (sollte 200 zurückgeben)
-curl -u staging:DEIN_PASSWORT -I https://staging.mallorca-map.com/de
+curl -u admin:9963 -I https://staging.mallorca-map.com/de
 
 # Test 3: Headers überprüfen
-curl -I https://staging.mallorca-map.com/de -u staging:DEIN_PASSWORT | grep -i "x-robots\|cache-control"
+curl -I https://staging.mallorca-map.com/de -u admin:9963 | grep -i "x-robots\|cache-control"
 
 # Erwartete Header:
 # X-Robots-Tag: noindex, nofollow, noarchive, noimageindex, nosnippet, notranslate

@@ -20,5 +20,8 @@
     "packageManager": "bun@1.1.40",
     "engines": {
         "node": ">=20.0.0"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.75.1"
     }
 }

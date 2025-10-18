@@ -1,4 +1,26 @@
-# Mallorca Map Next - Monorepo
+# 🗺️ Mallorca Map - Full-Stack Monorepo
+
+> **Die #1 Plattform für Mallorca - Touren, Events, Restaurants, Jobs & mehr**
+
+**Status:** 🚧 In aktiver Entwicklung  
+**Tech Stack:** Next.js 15 + React Native Expo + Supabase  
+**Sprachen:** Deutsch, English, Español
+
+---
+
+## ⚠️ WICHTIG: Entwicklungs-Prinzipien
+
+**Dieses Projekt wird nach höchsten Qualitätsstandards entwickelt:**
+
+✅ **Keine Kompromisse** - Professionell, skalierbar, wartbar  
+✅ **State-of-the-Art** - Moderne Best Practices  
+✅ **Langfristig** - Gebaut für 10+ Jahre  
+
+📖 **Vollständige Prinzipien:** [`DEVELOPMENT_PRINCIPLES.md`](./DEVELOPMENT_PRINCIPLES.md)
+
+---
+
+## 🏗️ Architektur
 
 Modern Turborepo setup für Mallorca Map mit Next.js (Web) und React Native (Mobile).
 
@@ -64,7 +86,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 ### Staging Environment
 
 **URL:** `https://staging.mallorca-map.com`  
-**Auth:** `staging / 9963`
+**Auth:** `admin / 9963`
 
 ### ⚠️ WICHTIGSTE REGEL: NUR DU MACHST GIT PUSH!
 
@@ -116,12 +138,21 @@ git push origin main
 
 ## 📚 Dokumentation
 
-- **`.cursorrules`** - Cursor AI Richtlinien & Tech Stack
+### 🔴 **PFLICHTLEKTÜRE:**
+- **`DEVELOPMENT_PRINCIPLES.md`** - Entwicklungs-Prinzipien (BINDEND!)
+- **`.cursorrules`** - Cursor AI Rules mit Prinzipien
+
+### Technische Dokumentation:
 - **`ARCHITECTURE.md`** - Tiefe technische Doku
 - **`QUICKSTART.md`** - Schnelleinstieg für Entwickler
 - **`DEPLOYMENT.md`** - Detaillierte Deployment-Anleitung
+- **`MONOREPO_GUIDE.md`** - Monorepo Best Practices
+- **`supabase/README.md`** - Datenbank Schema & Migrations
+
+### Deployment:
 - **`.github/workflows/deploy-staging.yml`** - GitHub Actions Config
 - **`deploy/SSH_SETUP.md`** - SSH für Ausnahmefälle
+- **`deploy/STAGING_AUTH.md`** - Staging Environment Auth
 
 ---
 

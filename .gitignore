@@ -69,3 +69,10 @@ private_key
 .vault
 secrets/
 
+# 🔐 Zentrale Credentials Datei (NEVER COMMIT!)
+CREDENTIALS.md
+
+# Service Account Keys
+service-account-key.json
+**/service-account-key.json
+
