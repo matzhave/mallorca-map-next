@@ -7,7 +7,7 @@ export default async function HomePage({
     params: Promise<{ lang: string }>;
 }) {
     const { lang } = await params;
-    const t = await getTranslations();
+    const t = await getTranslations({ locale: lang });
 
     // Fetch data with error handling - gracefully degrade if DB is unavailable
     let categories = null;
