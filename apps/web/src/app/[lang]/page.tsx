@@ -4,22 +4,35 @@ import { getTranslations } from 'next-intl/server';
 export default async function HomePage({
   params,
 }: {
-  params: Promise<{ lang: string }>; // Next.js 15: params is a Promise
+  params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
   const t = await getTranslations();
-    // Fetch categories to test DB connection
-    const { data: categories } = await supabase
+  
+  // Fetch data with error handling - gracefully degrade if DB is unavailable
+  let categories = null;
+  let placesCount = null;
+  
+  try {
+    const { data } = await supabase
         .from('categories')
         .select('*')
         .is('parent_id', null)
         .order('sort_order')
         .limit(10);
+    categories = data;
+  } catch (error) {
+    console.warn('Failed to fetch categories:', error);
+  }
 
-  // Fetch platform stats (count)
-  const { count: placesCount } = await supabase
-    .from('places')
-    .select('*', { count: 'exact', head: true });
+  try {
+    const { count } = await supabase
+      .from('places')
+      .select('*', { count: 'exact', head: true });
+    placesCount = count;
+  } catch (error) {
+    console.warn('Failed to fetch places count:', error);
+  }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-secondary to-white">
@@ -59,7 +72,7 @@ export default async function HomePage({
                 <div className="grid grid-cols-2 gap-6 max-w-2xl mx-auto mb-16">
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <div className="text-4xl font-bold text-primary mb-2">
-              {placesCount || 0}
+              {placesCount ?? 0}
             </div>
             <div className="text-gray-600">{t('home.stats_entries')}</div>
           </div>
@@ -70,32 +83,33 @@ export default async function HomePage({
                 </div>
 
                 {/* Categories */}
-                <div className="mb-16">
+                {categories && categories.length > 0 && (
+                  <div className="mb-16">
                     <h2 className="text-3xl font-bold text-center mb-8">
                         {t('home.popular_categories')}
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {categories?.map((category) => (
-              <a
-                key={category.id}
-                href={`/${lang}/${category.slug_de}`}
-                                className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow group"
-                            >
-                                <div
-                                    className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl"
-                                    style={{ backgroundColor: category.color || '#14B8C4' }}
-                                >
-                                    {/* Icon würde hier hin */}
-                                    📍
-                                </div>
-                                <div className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
-                                    {category.name_de}
-                                </div>
-                                <div className="text-sm text-gray-500 mt-1">0 Einträge</div>
-                            </a>
-                        ))}
+              {categories.map((category) => (
+                <a
+                  key={category.id}
+                  href={`/${lang}/${category.slug_de}`}
+                                  className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow group"
+                              >
+                                  <div
+                                      className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl"
+                                      style={{ backgroundColor: category.color || '#14B8C4' }}
+                                  >
+                                      📍
+                                  </div>
+                                  <div className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                                      {category.name_de}
+                                  </div>
+                                  <div className="text-sm text-gray-500 mt-1">0 Einträge</div>
+                              </a>
+                            ))}
                     </div>
-                </div>
+                  </div>
+                )}
 
                 {/* Simple Footer */}
                 <footer className="text-center text-gray-600 text-sm pt-16 border-t">

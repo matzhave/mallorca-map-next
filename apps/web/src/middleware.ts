@@ -3,9 +3,9 @@ import { locales, defaultLocale } from './i18n';
 import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware({
-    locales,
-    defaultLocale,
-    localePrefix: 'always',
+  locales,
+  defaultLocale,
+  localePrefix: 'always',
 });
 
 export default function middleware(request: NextRequest) {
@@ -22,7 +22,7 @@ export default function middleware(request: NextRequest) {
 
   // Smart language detection for root and non-prefixed paths
   const detectedLocale = detectLanguage(request);
-  
+
   return NextResponse.redirect(
     new URL(`/${detectedLocale}${pathname === '/' ? '' : pathname}`, request.url)
   );
