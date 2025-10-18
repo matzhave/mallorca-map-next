@@ -91,6 +91,28 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
+### ✅ Secrets/Environment Variables ändern
+Wenn du später Supabase Keys oder andere Secrets ändern musst:
+```bash
+# SSH zum Server
+ssh -i mallorca-map-deploy-key root@49.13.205.128
+
+# Edit .env.local
+cd /app/mallorca-map-next/apps/web
+nano .env.local
+
+# Speichern: Ctrl+O, Enter, Ctrl+X
+
+# Neu builden & restart
+cd /app/mallorca-map-next
+bun run build
+pm2 restart mallorca-map-staging
+# oder:
+sudo systemctl restart mallorca-map-staging
+```
+
+**Wichtig:** `.env.local` ist in `.gitignore` und wird **NIEMALS** zu Git committed!
+
 ### ✅ Emergency-Fixes
 Falls GitHub Actions kaputt ist - dann via SSH manuell deployen:
 ```bash
